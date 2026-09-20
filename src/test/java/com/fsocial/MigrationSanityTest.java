@@ -1,16 +1,16 @@
 package com.fsocial;
 
-import com.fsocial.entity.Account;
-import com.fsocial.entity.Comment;
-import com.fsocial.entity.Post;
-import com.fsocial.entity.PostLike;
-import com.fsocial.entity.Attachments;
-import com.fsocial.enums.AttachmentType;
-import com.fsocial.repository.AccountRepository;
-import com.fsocial.repository.AttachmentsRepository;
-import com.fsocial.repository.CommentRepository;
-import com.fsocial.repository.PostLikeRepository;
-import com.fsocial.repository.PostRepository;
+import com.fsocial.user.internal.entity.Account;
+import com.fsocial.comment.internal.entity.Comment;
+import com.fsocial.post.internal.entity.Post;
+import com.fsocial.post.internal.entity.PostLike;
+import com.fsocial.media.internal.entity.Attachments;
+import com.fsocial.media.api.AttachmentType;
+import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.media.internal.repository.AttachmentsRepository;
+import com.fsocial.comment.internal.repository.CommentRepository;
+import com.fsocial.post.internal.repository.PostLikeRepository;
+import com.fsocial.post.internal.repository.PostRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
