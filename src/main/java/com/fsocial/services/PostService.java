@@ -1,5 +1,6 @@
 package com.fsocial.services;
 
+import com.fsocial.dto.ApiDataCursor;
 import com.fsocial.dto.post.*;
 import com.fsocial.dto.response.SearchPageResponse;
 
@@ -29,5 +30,5 @@ public interface PostService {
 
     List<PostResponse> getPostByFollowing(String userId);
 
-    List<PostResponse> getMyPost(String userId, String lastItem, String createdAt);
+    ApiDataCursor<PostResponse> getMyPost(String userId, String lastItem, String createdAt);
 }

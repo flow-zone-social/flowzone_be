@@ -1,21 +1,25 @@
 package com.fsocial.dto.Attachments;
 
 import com.fsocial.enums.AttachmentType;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-public interface AttachementProfileDTO {
-    String getId();
-    String getPublicId();
-    String getUrl();
-    String getResourceType();
-    String getFileType();
-    String getSize();
-    String getOwnerId();
-    String getPostId();
-    Integer getOrd();
-    Integer getWidth();
-    Integer getHeight();
-    AttachmentType getType();
-    LocalDateTime getCreatedAt();
+@Getter
+@AllArgsConstructor
+public  class AttachementProfileDTO {
+    String id;
+    String publicId;
+    String url;
+    String resourceType;
+    String fileType;
+    String size;
+    String ownerId;
+    String postId;
+    Integer ord;
+    Integer width;
+    Integer height;
+    AttachmentType type;
+    LocalDateTime createdAt;
 }

@@ -62,7 +62,7 @@ public class AttachmentsServiceImpl implements AttachmentsService {
     }
 
     @Override
-    public ApiDataCursor<AttachmentDTO> getAttachmentByOwnerId(AttachmentsRequest dto, String userId) {
+    public ApiDataCursor<AttachementProfileDTO> getAttachmentByOwnerId(AttachmentsRequest dto, String userId) {
 
 
         Sort sort = Sort.by("createdAt").descending().and(Sort.by("id").descending());
@@ -78,24 +78,8 @@ public class AttachmentsServiceImpl implements AttachmentsService {
 
         Window<AttachementProfileDTO> listItem = attachmentsRepository
                 .findByOwnerIdAndResourceType(userId, dto.getResourceType().toLowerCase(), sort, position);
-        List<AttachmentDTO> data = listItem.getContent().stream()
-                .map(p -> AttachmentDTO.builder()
-                        .id(p.getId())
-                        .publicId(p.getPublicId())
-                        .url(p.getUrl())
-                        .resourceType(p.getResourceType())
-                        .fileType(p.getFileType())
-                        .size(p.getSize())
-                        .ownerId(p.getOwnerId())
-                        .ord(p.getOrd())
-                        .width(p.getWidth())
-                        .height(p.getHeight())
-                        .type(p.getType())
-                        .createdAt(p.getCreatedAt())
-                        .build())
-                .toList();
-        return ApiDataCursor.<AttachmentDTO>builder()
-                .items(data)
+        return ApiDataCursor.<AttachementProfileDTO>builder()
+                .items(listItem.getContent())
                 .hasMore(listItem.hasNext())
                 .build();
     }

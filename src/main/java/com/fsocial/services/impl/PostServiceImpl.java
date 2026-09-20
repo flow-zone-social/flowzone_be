@@ -1,13 +1,12 @@
 package com.fsocial.services.impl;
 
+import com.fsocial.dto.ApiDataCursor;
 import com.fsocial.dto.notification.NotificationDTO;
 import com.fsocial.dto.post.*;
 import com.fsocial.entity.Account;
 import com.fsocial.entity.Post;
 import com.fsocial.entity.PostLike;
-import com.fsocial.dto.post.*;
 import com.fsocial.dto.response.SearchPageResponse;
-import com.fsocial.entity.*;
 import com.fsocial.enums.AttachmentType;
 import com.fsocial.enums.NotificationType;
 import com.fsocial.exception.AppException;
@@ -340,7 +339,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostResponse> getMyPost(String userId, String lastItem, String createdAt) {
+    public ApiDataCursor<PostResponse> getMyPost(String userId, String lastItem, String createdAt) {
 
         Sort sort = Sort.by("createdAt").descending().and(Sort.by("id").descending());
         ScrollPosition position;
@@ -352,6 +351,6 @@ public class PostServiceImpl implements PostService {
 
 //        Window<PostResponse> data = postRepository.findByCreatedBy();
 
-        return List.of();
+        return (ApiDataCursor<PostResponse>) List.of();
     }
 }

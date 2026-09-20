@@ -134,6 +134,18 @@ public class PostController {
                 .build();
     }
 
+    //get post display timeline
+    @GetMapping("/profile")
+    public ApiResponse<List<PostResponse>> getPostsProfile(@AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getSubject();
+        List<PostResponse> posts = postService.getPostsByUserId(userId, 10);
+        return ApiResponse.<List<PostResponse>>builder()
+                .message("Lấy bài đăng thành công")
+                .dateTime(LocalDateTime.now())
+                .data(posts)
+                .build();
+    }
+
     @GetMapping("/following")
     public ApiResponse<List<PostResponse>> getPostsByFollowing(@AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();

@@ -1,5 +1,6 @@
 package com.fsocial.controller;
 
+import com.fsocial.dto.ApiDataCursor;
 import com.fsocial.dto.ApiResponse;
 import com.fsocial.dto.post.PostResponse;
 import com.fsocial.dto.profile.ProfileResponse;
@@ -41,10 +42,10 @@ public class ProfileController {
     }
 
     @GetMapping("/post")
-    public ApiResponse<List<PostResponse>> getPostProfile(@AuthenticationPrincipal Jwt jwt,@RequestParam(name = "last-item") String lastItem,
-                                                          @RequestParam(name = "created-at") String createAt) {
+    public ApiResponse<ApiDataCursor<PostResponse>> getPostProfile(@AuthenticationPrincipal Jwt jwt, @RequestParam(name = "last-item") String lastItem,
+                                                                   @RequestParam(name = "created-at") String createAt) {
         int size = 10;
-        return ApiResponse.<List<PostResponse>>builder()
+        return ApiResponse.<ApiDataCursor<PostResponse>>builder()
                 .data(postService.getMyPost(jwt.getSubject(), lastItem, createAt))
                 .message("Lấy thông tin tài khoản thành công")
                 .build();
