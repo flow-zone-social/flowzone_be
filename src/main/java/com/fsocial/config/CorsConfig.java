@@ -18,7 +18,8 @@ public class CorsConfig {
                 "http://localhost:3000",
                 "http://localhost:3001",
                 "https://fsocial.online",
-                "https://www.fsocial.online"
+                "https://www.fsocial.online",
+                "https://flowzone.vercel.app"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
         config.setAllowedHeaders(List.of("*"));
