@@ -1,7 +1,7 @@
 package com.fsocial.ai.internal.service;
 
-import com.fsocial.faq.internal.entity.Faq;
-import com.fsocial.faq.internal.repository.FaqRepository;
+import com.fsocial.faq.api.FaqApi;
+import com.fsocial.faq.api.FaqContent;
 import com.fsocial.ai.internal.service.AIChatService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class AIChatServiceImpl implements AIChatService {
     );
 
     ChatClient chatClient;
-    FaqRepository faqRepository;
+    FaqApi faqApi;
 
     @Override
     public String chatService(String prompt) {
@@ -57,7 +57,7 @@ public class AIChatServiceImpl implements AIChatService {
             return "";
         }
 
-        return faqRepository.findAll().stream()
+        return faqApi.findAllContents().stream()
                 .map(faq -> new ScoredFaq(faq, score(faq, keywords)))
                 .filter(scoredFaq -> scoredFaq.score() > 0)
                 .sorted(Comparator.comparingLong(ScoredFaq::score).reversed())
@@ -66,12 +66,12 @@ public class AIChatServiceImpl implements AIChatService {
                 .collect(Collectors.joining("\n\n"));
     }
 
-    private long score(Faq faq, Set<String> keywords) {
+    private long score(FaqContent faq, Set<String> keywords) {
         String content = normalize(String.join(" ",
                 value(faq.getName()),
                 value(faq.getDescription()),
                 value(faq.getContent()),
-                faq.getType().name()
+                faq.getType()
         ));
         return keywords.stream().filter(content::contains).count();
     }
@@ -82,9 +82,9 @@ public class AIChatServiceImpl implements AIChatService {
                 .collect(Collectors.toSet());
     }
 
-    private String formatFaq(Faq faq) {
+    private String formatFaq(FaqContent faq) {
         return "Tên: " + value(faq.getName()) + "\n"
-                + "Loại: " + faq.getType() + "\n"
+                + "Loại: " + value(faq.getType()) + "\n"
                 + "Mô tả: " + value(faq.getDescription()) + "\n"
                 + "Nội dung: " + value(faq.getContent());
     }
@@ -102,6 +102,6 @@ public class AIChatServiceImpl implements AIChatService {
         return text == null ? "" : text;
     }
 
-    private record ScoredFaq(Faq faq, long score) {
+    private record ScoredFaq(FaqContent faq, long score) {
     }
 }

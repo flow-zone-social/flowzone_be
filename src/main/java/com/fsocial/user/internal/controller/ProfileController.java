@@ -19,6 +19,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -32,9 +33,17 @@ public class ProfileController {
     ProfileService profileService;
     PostService postService;
 
-    @GetMapping()
-    public ApiResponse<AccountResponse> getProfile(@AuthenticationPrincipal Jwt jwt) {
+    @GetMapping("/{followee_id}")
+    public ApiResponse<AccountResponse> getProfile(@PathVariable(name = "followee_id") String followee) {
+        log.info("followee: {}", followee);
+        return ApiResponse.<AccountResponse>builder()
+                .data(accountService.getUser(followee))
+                .message("Lấy thông tin tài khoản thành công")
+                .build();
+    }
 
+    @GetMapping()
+    public ApiResponse<AccountResponse> getProfileOwner(@AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<AccountResponse>builder()
                 .data(accountService.getUser(jwt.getSubject()))
                 .message("Lấy thông tin tài khoản thành công")
@@ -42,11 +51,10 @@ public class ProfileController {
     }
 
     @GetMapping("/post")
-    public ApiResponse<ApiDataCursor<PostResponse>> getPostProfile(@AuthenticationPrincipal Jwt jwt, @RequestParam(name = "last-item") String lastItem,
-                                                                   @RequestParam(name = "created-at") String createAt) {
-        int size = 10;
+    public ApiResponse<ApiDataCursor<PostResponse>> getPostProfile(@RequestParam(name = "user_id") String userId ,@RequestParam(name = "last_item") String lastItem,
+                                                                   @RequestParam(name = "created_at") String createAt) {
         return ApiResponse.<ApiDataCursor<PostResponse>>builder()
-                .data(postService.getMyPost(jwt.getSubject(), lastItem, createAt))
+                .data(postService.getMyPost(userId, lastItem, createAt))
                 .message("Lấy thông tin tài khoản thành công")
                 .build();
     }

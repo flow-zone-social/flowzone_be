@@ -1,25 +1,20 @@
 package com.fsocial.post.internal.service;
 
+import com.fsocial.post.internal.dto.*;
 import com.fsocial.shared.response.ApiDataCursor;
 
 import com.fsocial.shared.response.SearchPageResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import com.fsocial.post.internal.dto.PostDTO;
-import com.fsocial.post.internal.dto.PostDTORequest;
-import com.fsocial.post.internal.dto.PostResponse;
-import com.fsocial.post.internal.dto.PostShareDTORequest;
-import com.fsocial.post.internal.dto.PostStatisticsDTO;
-import com.fsocial.post.internal.dto.PostStatisticsLongDateDTO;
 
 public interface PostService {
-    PostDTO createPost(PostDTORequest request);
-    PostDTO updatePost(PostDTORequest post, String postId);
+    PostDTO createPost(PostRequest request);
+    PostDTO updatePost(PostUpdated post, String postId);
     void deletePost(String postId) ;
     boolean toggleLike(String postId, String userId) throws Exception;
     Integer CountLike(String postId, String userId);
-    PostDTO sharePost (PostShareDTORequest dto );
+    PostDTO sharePost (PostShareRequest dto );
 
     // Methods from timelineService
     List<PostResponse> getPostsByUserId(String userId, int feedSize);

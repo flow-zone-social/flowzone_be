@@ -3,7 +3,7 @@ package com.fsocial.post.internal.util;
 import com.fsocial.post.internal.dto.ContentResponse;
 import com.fsocial.post.internal.dto.MediaResponse;
 import com.fsocial.post.internal.dto.PostResponse;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.api.ActorSnapshotDTO;
 import com.fsocial.media.internal.entity.Attachments;
 import com.fsocial.post.internal.entity.Post;
 import com.fsocial.media.api.MediaLayoutType;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import com.fsocial.user.internal.util.DisplayNameUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -23,7 +22,7 @@ import com.fsocial.user.internal.util.DisplayNameUtils;
 public class PostUtils {
 
     /** likeCount / isLike vẫn ở bảng riêng (post_like) nên phải truyền vào; tags đọc thẳng từ entity. */
-    public static PostResponse buildPostResponse(Post post, Account owner, int commentCount,
+    public static PostResponse buildPostResponse(Post post, ActorSnapshotDTO owner, int commentCount,
                                                  int likeCount, boolean liked) {
         return PostResponse.builder()
                 .id(post.getId())
@@ -32,7 +31,7 @@ public class PostUtils {
                 .countLikes(likeCount)
                 .countComments(commentCount)
                 .userId(post.getOwner().getId())
-                .displayName(DisplayNameUtils.build(owner))
+                .displayName(owner == null ? "" : owner.getDisplayName())
                 .avatar(owner == null ? null : owner.getAvatar())
                 .createDatetime(post.getCreateDatetime())
                 .isLike(liked)

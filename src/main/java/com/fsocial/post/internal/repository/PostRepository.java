@@ -1,5 +1,6 @@
 package com.fsocial.post.internal.repository;
 
+import com.fsocial.post.internal.dto.PostResponse;
 import com.fsocial.post.internal.dto.PostStatisticsDTO;
 import com.fsocial.post.internal.dto.PostStatisticsLongDateDTO;
 import com.fsocial.post.internal.entity.Post;
@@ -162,5 +163,8 @@ public interface PostRepository extends JpaRepository<Post, String> {
                      @Param("raw") double rawEngagement,
                      @Param("global") double globalScore);
 
-    Window<List<Post>> findByCreatedBy(String createdBy, Sort sort, ScrollPosition position);
+    Window<List<Post>> findByOwnerId(String ownerId, Sort sort, ScrollPosition position);
+
+    @Query("select p from Post p")
+    List<PostResponse> findPost(String userId, Pageable pageable);
 }

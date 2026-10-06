@@ -15,15 +15,15 @@ public class HashtagSyncScheduler {
 
     private final HashtagRepository hashtagRepository;
 
-    @Scheduled(cron = "0 0 * * * ?")
-    @Transactional
-    public void syncHashtagCatalog() {
-        try {
-            hashtagRepository.syncCounts();
-            hashtagRepository.deleteUnused();
-            log.info("Hashtag catalog sync completed");
-        } catch (Exception e) {
-            log.error("Hashtag catalog sync failed: {}", e.getMessage(), e);
-        }
-    }
+//    @Scheduled(cron = "0 0 * * * ?")
+//    @Transactional
+//    public void syncHashtagCatalog() {
+//        try {
+//            hashtagRepository.syncCounts();
+//            hashtagRepository.deleteUnused();
+//            log.info("Hashtag catalog sync completed");
+//        } catch (Exception e) {
+//            log.error("Hashtag catalog sync failed: {}", e.getMessage(), e);
+//        }
+//    }
 }

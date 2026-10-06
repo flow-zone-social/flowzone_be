@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import com.fsocial.shared.persistence.AbstractEntity;
+import com.fsocial.post.internal.entity.Post;
 
 /**
  * Gộp cả comment gốc và reply vào một bảng: parent_id NULL = comment gốc,
@@ -24,8 +25,9 @@ import com.fsocial.shared.persistence.AbstractEntity;
 @SuperBuilder
 public class Comment extends AbstractEntity<String> {
 
-    @Column(name = "post_id", length = 36, nullable = false)
-    String postId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")

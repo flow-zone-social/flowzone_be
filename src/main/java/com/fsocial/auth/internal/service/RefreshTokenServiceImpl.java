@@ -2,7 +2,7 @@ package com.fsocial.auth.internal.service;
 
 import com.fsocial.auth.internal.dto.AuthenticationResponse;
 import com.fsocial.auth.internal.entity.RefreshToken;
-import com.fsocial.shared.exception.AccountErrorCode;
+import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.user.internal.repository.AccountRepository;
 import com.fsocial.auth.internal.repository.RefreshTokenRepository;
@@ -42,7 +42,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Transactional
     public RefreshToken createRefreshToken(String accountId, String userAgent, String ipAddress) {
         accountRepository.findById(accountId)
-                .orElseThrow(() -> new AppException(AccountErrorCode.ACCOUNT_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
 
         long tokenCount = refreshTokenRepository.countByAccountId(accountId);
         int MAX_REFRESH_TOKENS = 5;
@@ -70,10 +70,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         if (existedRT.getExpiryDate().isBefore(Instant.now())) {
             refreshTokenRepository.delete(existedRT);
             log.warn("Refresh token đã hết hạn: {}", token);
-            throw new AppException(AccountErrorCode.TOKEN_EXPIRED);
+            throw new AppException(StatusCode.TOKEN_EXPIRED);
         }
-        if (!existedRT.getUserAgent().equals(userAgent)) throw new AppException(AccountErrorCode.UNAUTHENTICATED);
-        if (!existedRT.getIpAddress().equals(ipAddress)) throw new AppException(AccountErrorCode.UNAUTHENTICATED);
+        if (!existedRT.getUserAgent().equals(userAgent)) throw new AppException(StatusCode.UNAUTHENTICATED);
+        if (!existedRT.getIpAddress().equals(ipAddress)) throw new AppException(StatusCode.UNAUTHENTICATED);
 
         return existedRT;
     }
@@ -105,7 +105,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> {
                     log.warn("Refresh token không hợp lệ: {}", refreshToken);
-                    return new AppException(AccountErrorCode.INVALID_TOKEN);
+                    return new AppException(StatusCode.INVALID_TOKEN);
                 });
     }
 

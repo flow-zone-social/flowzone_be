@@ -40,23 +40,13 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue postCommentDeleteQueue() {
-        return new Queue(AMQPConst.POST_COMMENT_DELETE.getQueue(), true);
-    }
-
-    @Bean
     public Queue postCommentAttachmentsQueue() {
         return new Queue(AMQPConst.POST_ATTACHMENTS_DELETE.getQueue(), true);
     }
 
     @Bean
     public FanoutExchange postDeleteExchange(){
-        return new FanoutExchange(AMQPConst.POST_COMMENT_DELETE.getExchange());
-    }
-
-    @Bean
-    public Binding postCommentDeleteBinding(){
-        return BindingBuilder.bind(postCommentDeleteQueue()).to(postDeleteExchange());
+        return new FanoutExchange(AMQPConst.POST_ATTACHMENTS_DELETE.getExchange());
     }
 
     @Bean

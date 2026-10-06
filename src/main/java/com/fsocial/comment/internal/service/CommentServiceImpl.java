@@ -1,13 +1,13 @@
 package com.fsocial.comment.internal.service;
 
-import com.fsocial.comment.internal.dto.CommentDTO;
 import com.fsocial.comment.internal.dto.CommentDTORequest;
 import com.fsocial.comment.internal.dto.CommentResponse;
 import com.fsocial.comment.internal.dto.CommentUpdateDTORequest;
 import com.fsocial.notification.internal.dto.NotificationDTO;
 import com.fsocial.post.internal.dto.ContentResponse;
 import com.fsocial.media.api.MediaItemDTO;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.api.ActorSnapshotDTO;
+import com.fsocial.user.api.UserApi;
 import com.fsocial.comment.internal.entity.Comment;
 import com.fsocial.comment.internal.entity.CommentLike;
 import com.fsocial.comment.internal.entity.CommentMedia;
@@ -18,15 +18,12 @@ import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.post.internal.feed.publisher.InteractionEventPublisher;
 import com.fsocial.notification.api.NotificationEvent;
-import com.fsocial.user.internal.repository.AccountRepository;
 import com.fsocial.comment.internal.repository.CommentLikeRepository;
 import com.fsocial.comment.internal.repository.CommentRepository;
 import com.fsocial.post.internal.repository.PostRepository;
-import com.fsocial.user.internal.service.AccountService;
 import com.fsocial.comment.internal.service.CommentService;
 import com.fsocial.shared.redis.RedisService;
-import com.fsocial.user.internal.util.DisplayNameUtils;
-import com.fsocial.media.internal.util.MediaUploadUtils;
+import com.fsocial.media.api.MediaApi;
 import com.fsocial.post.internal.util.PostUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -49,10 +46,9 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl implements CommentService {
     CommentRepository commentRepository;
     CommentLikeRepository commentLikeRepository;
-    MediaUploadUtils mediaUploadUtils;
+    MediaApi mediaApi;
     PostRepository postRepository;
-    AccountService accountService;
-    AccountRepository accountRepository;
+    UserApi userApi;
     RedisService redisService;
     InteractionEventPublisher interactionEventPublisher;
     NotificationEvent notificationEvent;
@@ -60,14 +56,14 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentResponse addComment(CommentDTORequest request) {
-        MediaItemDTO[] mediaItems = mediaUploadUtils.uploadValidMedia(request.getMedia());
+        MediaItemDTO[] mediaItems = mediaApi.uploadValidMedia(request.getMedia());
 
         String postId = request.getPostId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException("Không tìm thấy bài đăng", StatusCode.POST_NOT_FOUND));
 
         Comment comment = Comment.builder()
-                .postId(postId)
+                .post(post)
                 .userId(request.getUserId())
                 .text(request.getText())
                 .html(request.getHtml())
@@ -84,7 +80,7 @@ public class CommentServiceImpl implements CommentService {
 
         notifyOwner(ownerId, request.getUserId(), NotificationType.COMMENT_SINGLE);
 
-        Account owner = accountRepository.findById(saved.getUserId()).orElse(null);
+        ActorSnapshotDTO owner = userApi.getOwners(List.of(saved.getUserId())).stream().findFirst().orElse(null);
         return buildCommentResponse(saved, owner, 0, 0, false);
     }
 
@@ -149,14 +145,14 @@ public class CommentServiceImpl implements CommentService {
             // FK comment.parent_id ON DELETE CASCADE dọn reply; comment_like/comment_media cascade theo
             commentRepository.deleteById(commentID);
             // Publish COMMENT_DELETE so score + interest are recomputed
-            interactionEventPublisher.publish(comment.getPostId(), comment.getUserId(), "COMMENT_DELETE",
-                    postRepository.findById(comment.getPostId()).map(Post::getTags).orElse(List.of()));
+            interactionEventPublisher.publish(comment.getPost().getId(), comment.getUserId(), "COMMENT_DELETE",
+                    postRepository.findById(comment.getPost().getId()).map(Post::getTags).orElse(List.of()));
         });
         return "Xóa comment thành công";
     }
 
     public boolean userExists(String userId) {
-        return accountService.existsById(userId);
+        return userApi.existsById(userId);
     }
 
     public boolean commentExist(String commentId) {
@@ -172,7 +168,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public CommentResponse convertToCommentResponse(Comment comment) {
-        Account owner = accountRepository.findById(comment.getUserId()).orElse(null);
+        ActorSnapshotDTO owner = userApi.getOwners(List.of(comment.getUserId())).stream().findFirst().orElse(null);
         String requesterId = currentUserId();
         return buildCommentResponse(comment, owner,
                 commentLikeRepository.countByCommentId(comment.getId()),
@@ -181,21 +177,14 @@ public class CommentServiceImpl implements CommentService {
                         && commentLikeRepository.existsByCommentIdAndUserId(comment.getId(), requesterId));
     }
 
-    @Override
-    @Transactional
-    public List<CommentDTO> deleteCommentByPostId(String postId) {
-        commentRepository.deleteByPostId(postId);
-        return List.of();
-    }
-
     private List<CommentResponse> toCommentResponses(List<Comment> comments, String requesterId) {
         if (comments.isEmpty()) return List.of();
 
         List<String> commentIds = comments.stream().map(Comment::getId).toList();
         List<String> ownerIds = comments.stream().map(Comment::getUserId).distinct().toList();
 
-        Map<String, Account> accountMap = accountRepository.findAllById(ownerIds).stream()
-                .collect(Collectors.toMap(Account::getId, Function.identity()));
+        Map<String, ActorSnapshotDTO> accountMap = userApi.getOwners(ownerIds).stream()
+                .collect(Collectors.toMap(ActorSnapshotDTO::getUserId, Function.identity()));
 
         Map<String, Integer> likeCountMap = commentLikeRepository.countByCommentIdIn(commentIds).stream()
                 .collect(Collectors.toMap(r -> (String) r[0], r -> ((Number) r[1]).intValue()));
@@ -215,15 +204,15 @@ public class CommentServiceImpl implements CommentService {
                 .collect(Collectors.toList());
     }
 
-    private CommentResponse buildCommentResponse(Comment comment, Account owner,
+    private CommentResponse buildCommentResponse(Comment comment, ActorSnapshotDTO owner,
                                                  int likeCount, int replyCount, boolean liked) {
         return CommentResponse.builder()
                 .id(comment.getId())
-                .postId(comment.getPostId())
+                .postId(comment.getPost().getId())
                 .content(buildContent(comment))
                 .countLikes(likeCount)
                 .countReplies(replyCount)
-                .displayName(DisplayNameUtils.build(owner))
+                .displayName(owner == null ? "" : owner.getDisplayName())
                 .userId(comment.getUserId())
                 .reply(comment.isReply())
                 .like(liked)

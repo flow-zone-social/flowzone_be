@@ -1,6 +1,5 @@
 package com.fsocial.comment.internal.service;
 
-import com.fsocial.comment.internal.dto.CommentDTO;
 import com.fsocial.comment.internal.dto.CommentDTORequest;
 import com.fsocial.comment.internal.dto.CommentResponse;
 import com.fsocial.comment.internal.dto.CommentUpdateDTORequest;
@@ -23,6 +22,4 @@ public interface CommentService {
     List<CommentResponse> getComments(String postId);
 
     CommentResponse convertToCommentResponse(Comment comment);
-
-    List<CommentDTO> deleteCommentByPostId(String postId);
 }

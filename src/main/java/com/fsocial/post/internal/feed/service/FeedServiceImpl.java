@@ -2,14 +2,14 @@ package com.fsocial.post.internal.feed.service;
 
 import com.fsocial.post.internal.dto.PostOriginResponse;
 import com.fsocial.post.internal.dto.PostResponse;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.api.ActorSnapshotDTO;
 import com.fsocial.post.internal.entity.Post;
 
 
 import com.fsocial.post.internal.feed.service.FeedService;
 import com.fsocial.post.internal.feed.service.InterestGraphService;
 import com.fsocial.post.internal.feed.service.ScoringService;
-import com.fsocial.user.internal.util.DisplayNameUtils;
+import com.fsocial.user.api.UserApi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -30,8 +30,6 @@ import com.fsocial.comment.internal.repository.CommentRepository;
 import com.fsocial.post.internal.feed.repository.SeenPostRepository;
 import com.fsocial.post.internal.repository.PostLikeRepository;
 import com.fsocial.post.internal.repository.PostRepository;
-import com.fsocial.user.internal.repository.AccountRepository;
-import com.fsocial.user.internal.repository.FollowRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -54,9 +52,8 @@ public class FeedServiceImpl implements FeedService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
     private final SeenPostRepository seenPostRepository;
-    private final AccountRepository accountRepository;
+    private final UserApi userApi;
     private final CommentRepository commentRepository;
-    private final FollowRepository followRepository;
     private final InterestGraphService interestGraphService;
     private final ScoringService scoringService;
     private final JdbcTemplate jdbcTemplate;
@@ -84,7 +81,7 @@ public class FeedServiceImpl implements FeedService {
         }
 
         // Enrich with social context and sort by final_score (score computed once per post)
-        Set<String> followingIds = new HashSet<>(followRepository.findFolloweeIds(userId));
+        Set<String> followingIds = new HashSet<>(userApi.findFolloweeIds(userId));
         List<String> postIds = candidates.stream().map(Post::getId).toList();
         Map<String, Integer> commentCountMap = buildCommentCountMap(postIds);
         Map<String, Integer> likeCountMap = buildLikeCountMap(postIds);
@@ -278,8 +275,8 @@ public class FeedServiceImpl implements FeedService {
         if (posts.isEmpty()) return List.of();
 
         List<String> ownerIds = posts.stream().map(p -> p.getOwner().getId()).distinct().toList();
-        Map<String, Account> accountMap = accountRepository.findAllById(ownerIds).stream()
-                .collect(Collectors.toMap(Account::getId, Function.identity()));
+        Map<String, ActorSnapshotDTO> accountMap = userApi.getOwners(ownerIds).stream()
+                .collect(Collectors.toMap(ActorSnapshotDTO::getUserId, Function.identity()));
 
         Set<String> likedByRequester = new HashSet<>(
                 postLikeRepository.findLikedPostIds(requesterId, posts.stream().map(Post::getId).toList()));
@@ -287,7 +284,7 @@ public class FeedServiceImpl implements FeedService {
 
         return posts.stream()
                 .map(post -> {
-                    Account owner = accountMap.get(post.getOwner().getId());
+                    ActorSnapshotDTO owner = accountMap.get(post.getOwner().getId());
                     if (owner == null) {
                         log.warn("Owner not found for post {}", post.getId());
                         return null;
@@ -316,8 +313,8 @@ public class FeedServiceImpl implements FeedService {
         List<String> originOwnerIds = originPosts.stream()
                 .map(p -> p.getOwner().getId())
                 .distinct().toList();
-        Map<String, Account> originOwnerMap = accountRepository.findAllById(originOwnerIds).stream()
-                .collect(Collectors.toMap(Account::getId, Function.identity()));
+        Map<String, ActorSnapshotDTO> originOwnerMap = userApi.getOwners(originOwnerIds).stream()
+                .collect(Collectors.toMap(ActorSnapshotDTO::getUserId, Function.identity()));
 
         return originPosts.stream().collect(Collectors.toMap(Post::getId,
                 origin -> buildPostOriginResponse(origin,
@@ -325,12 +322,12 @@ public class FeedServiceImpl implements FeedService {
                         origin.getTags())));
     }
 
-    private PostOriginResponse buildPostOriginResponse(Post originPost, Account owner, List<String> tags) {
+    private PostOriginResponse buildPostOriginResponse(Post originPost, ActorSnapshotDTO owner, List<String> tags) {
         return new PostOriginResponse(
                 originPost.getId(),
                 originPost.getOwner().getId(),
                 buildContentResponse(originPost),
-                DisplayNameUtils.build(owner),
+                owner != null ? owner.getDisplayName() : "",
                 owner != null ? owner.getAvatar() : null,
                 originPost.getCreateDatetime(),
                 tags);

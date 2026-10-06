@@ -1,10 +1,8 @@
 package com.fsocial.post.internal.mapper;
 
-import com.fsocial.user.api.ActorSnapshotDTO;
 import com.fsocial.post.api.ContentDTO;
 import com.fsocial.media.api.MediaItemDTO;
 import com.fsocial.post.internal.dto.PostDTO;
-import com.fsocial.user.internal.entity.Account;
 import com.fsocial.media.internal.entity.Attachments;
 import com.fsocial.post.internal.entity.Post;
 import org.mapstruct.Mapper;
@@ -25,9 +23,6 @@ public interface PostMapper {
     PostDTO toPostDTO(Post post);
 
     ContentDTO toContentDTO(Post post);
-
-    @Mapping(target = "userId", source = "id")
-    ActorSnapshotDTO toActorSnapshot(Account account);
 
     @Mapping(target = "attachmentId", source = "id")
     @Mapping(target = "type", source = "resourceType")

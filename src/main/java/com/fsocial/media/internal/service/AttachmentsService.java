@@ -15,6 +15,8 @@ public interface AttachmentsService {
 
     Attachments linkToPost(String attachmentId, String postId, int ord);
 
+    Attachments findById(String attachmentId);
+
     //    List<AttachmentDTO> getAttachmentsByOwnerId(String ownerId, Pageable pageable) throws AppCheckedException;
 //    List<AttachmentDTO> getAttachmentsByType(String ownerId,String fileType,  Pageable pageable) throws AppCheckedException;
     ApiDataCursor<AttachementProfileDTO> getAttachmentByOwnerId(AttachmentsRequest dto, String userId);

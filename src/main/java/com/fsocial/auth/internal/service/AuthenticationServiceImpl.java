@@ -10,7 +10,6 @@ import com.fsocial.user.internal.entity.Account;
 import com.fsocial.auth.internal.entity.AuthProviderCredential;
 import com.fsocial.user.internal.rbac.Role;
 import com.fsocial.auth.internal.entity.Token;
-import com.fsocial.shared.exception.AccountErrorCode;
 import com.fsocial.auth.api.AuthProvider;
 import com.fsocial.notification.api.NotificationType;
 import com.fsocial.shared.exception.AppException;
@@ -60,17 +59,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Account account = accountRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
                 .orElseThrow(() -> {
                     log.warn("Sai tên tài khoản hoặc mật khẩu: {}", request.getUsername());
-                    return new AppException(AccountErrorCode.LOGIN_FAILED);
+                    return new AppException(StatusCode.LOGIN_FAILED);
                 });
 
         authProviderRepository.findByAccount_IdAndProvider(account.getId(), AuthProvider.LOCAL)
                 .filter(auth -> auth.getPassword() != null && passwordEncoder.matches(request.getPassword(), auth.getPassword()))
                 .orElseThrow(() -> {
                     log.warn("Sai tên tài khoản hoặc mật khẩu: {}", request.getUsername());
-                    return new AppException(AccountErrorCode.LOGIN_FAILED);
+                    return new AppException(StatusCode.LOGIN_FAILED);
                 });
 
-        if (!account.isStatus()) throw new AppException(AccountErrorCode.ACCOUNT_BANNED);
+        if (!account.isStatus()) throw new AppException(StatusCode.ACCOUNT_BANNED);
 
        return saveToken(account, userAgent, httpRequest);
     }
@@ -132,7 +131,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .findByProviderAndProviderUserId(AuthProvider.GOOGLE, googleUserInfo.googleId());
         if (linkedAuth.isPresent()) {
             Account existingAccount = linkedAuth.get().getAccount();
-            if (!existingAccount.isStatus()) throw new AppException(AccountErrorCode.ACCOUNT_BANNED);
+            if (!existingAccount.isStatus()) throw new AppException(StatusCode.ACCOUNT_BANNED);
             return this.saveToken(existingAccount, userAgent, httpRequest);
         }
 
@@ -140,7 +139,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Optional<Account> accountByEmail = accountRepository.findByEmail(googleUserInfo.email());
         if (accountByEmail.isPresent()) {
             Account existingAccount = accountByEmail.get();
-            if (!existingAccount.isStatus()) throw new AppException(AccountErrorCode.ACCOUNT_BANNED);
+            if (!existingAccount.isStatus()) throw new AppException(StatusCode.ACCOUNT_BANNED);
 
             authProviderRepository.save(AuthProviderCredential.builder()
                     .account(existingAccount)

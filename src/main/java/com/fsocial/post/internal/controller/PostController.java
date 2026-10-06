@@ -1,5 +1,6 @@
 package com.fsocial.post.internal.controller;
 
+import com.fsocial.post.internal.dto.*;
 import com.fsocial.shared.response.ApiResponse;
 
 import com.fsocial.shared.response.SearchPageResponse;
@@ -23,13 +24,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.fsocial.post.internal.dto.LikePostDTO;
-import com.fsocial.post.internal.dto.PostDTO;
-import com.fsocial.post.internal.dto.PostDTORequest;
-import com.fsocial.post.internal.dto.PostResponse;
-import com.fsocial.post.internal.dto.PostShareDTORequest;
-import com.fsocial.post.internal.dto.PostStatisticsDTO;
-import com.fsocial.post.internal.dto.PostStatisticsLongDateDTO;
 
 @Slf4j
 @RestController
@@ -39,92 +33,6 @@ import com.fsocial.post.internal.dto.PostStatisticsLongDateDTO;
 @Tag(name = "Post controller")
 public class PostController {
     PostService postService;
-
-    @PreAuthorize("hasRole('USER')")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<PostDTO> createPost(@Valid @ModelAttribute PostDTORequest request, @AuthenticationPrincipal Jwt jwt) {
-        //Bai viet phai co noi dung hoac hinh anh
-
-        String userId = jwt.getSubject();
-        request.setUserId(userId);
-
-        if ((request.getText() == null || request.getText().isEmpty())
-                && (request.getMedia() == null || request.getMedia().length == 0)) {
-            throw new AppException("Bài viết phải có nội dung, hình ảnh hoặc video", StatusCode.NOT_CONTENT);
-        }
-
-        PostDTO post = postService.createPost(request);
-        log.info("Đăng bài viết thành công");
-        return ApiResponse.<PostDTO>builder()
-                .data(post)
-                .statusCode(StatusCode.CREATE_POST_SUCCESS.getCode())
-                .message("Tạo bài viết thành công")
-                .build();
-    }
-
-    @PutMapping
-    public ApiResponse<PostDTO> updatePost(
-            @RequestParam("text") String text,
-            @RequestParam("html") String html,
-            @RequestParam("postId") String postId) {
-
-        //check postId
-        if (postId == null || postId.isEmpty()) {
-            throw new AppException("Mã bài viết không được để trống", StatusCode.POST_NOT_FOUND);
-        }
-
-        //Mapping DTO
-        PostDTORequest postDTO = PostDTORequest.builder()
-                .text(text)
-                .html(html)
-                .build();
-
-        //Update Post
-        PostDTO post = postService.updatePost(postDTO, postId);
-
-        //return result
-        return ApiResponse.<PostDTO>builder()
-                .data(post)
-                .message("Cập nhật bài viết thành công")
-                .build();
-    }
-
-    @DeleteMapping
-    public ApiResponse<Void> deletePost(
-            @RequestParam("postId") String postId) {
-        postService.deletePost(postId);
-        return ApiResponse.<Void>builder()
-                .message("Xóa bài viết thành công")
-                .build();
-    }
-
-    //Like Post
-    @PostMapping("/like")
-    public ApiResponse<Map<String, Object>> likePost(@RequestBody LikePostDTO likeDTO,
-                                                     @AuthenticationPrincipal Jwt jwt) throws Exception {
-        String userId = jwt.getSubject();
-        boolean like = postService.toggleLike(likeDTO.getPostId(), userId);
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("like", like);
-        map.put("userId", userId);
-        return ApiResponse.<Map<String, Object>>builder()
-                .data(map)
-                .message(like ? "Thích bài viết thành công" : "bỏ thích bài viết thành công")
-                .build();
-    }
-
-    @PostMapping("/share")
-    public ApiResponse<PostDTO> sharePost(@Valid PostShareDTORequest share,
-                                          @AuthenticationPrincipal Jwt jwt) {
-        share.setUserId(jwt.getSubject());
-        PostDTO post = postService.sharePost(share);
-        return ApiResponse.<PostDTO>builder()
-                .data(post)
-                .statusCode(StatusCode.OK.getCode())
-                .message("Chia sẽ bài viết thành công")
-                .build();
-    }
 
     //get post display timeline
     @GetMapping
@@ -221,4 +129,88 @@ public class PostController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<PostDTO> createPost(@Valid @ModelAttribute PostRequest request, @AuthenticationPrincipal Jwt jwt) {
+        //Bai viet phai co noi dung hoac hinh anh
+        String userId = jwt.getSubject();
+        request.setUserId(userId);
+
+        if ((request.getText() == null || request.getText().isEmpty())
+                && (request.getMedia() == null || request.getMedia().length == 0)) {
+            throw new AppException("Bài viết phải có nội dung, hình ảnh hoặc video", StatusCode.NOT_CONTENT);
+        }
+
+        PostDTO post = postService.createPost(request);
+        log.info("Đăng bài viết thành công");
+        return ApiResponse.<PostDTO>builder()
+                .data(post)
+                .statusCode(StatusCode.CREATE_POST_SUCCESS.getCode())
+                .message("Tạo bài viết thành công")
+                .build();
+    }
+
+    @PutMapping
+    public ApiResponse<PostDTO> updatePost(
+            @RequestParam("text") String text,
+            @RequestParam("html") String html,
+            @RequestParam("postId") String postId) {
+
+        //check postId
+        if (postId == null || postId.isEmpty()) {
+            throw new AppException("Mã bài viết không được để trống", StatusCode.POST_NOT_FOUND);
+        }
+
+        //Mapping DTO
+        PostUpdated postDTO = PostUpdated.builder()
+                .text(text)
+                .html(html)
+                .build();
+
+        //Update Post
+        PostDTO post = postService.updatePost(postDTO, postId);
+
+        //return result
+        return ApiResponse.<PostDTO>builder()
+                .data(post)
+                .message("Cập nhật bài viết thành công")
+                .build();
+    }
+
+    @DeleteMapping
+    public ApiResponse<Void> deletePost(
+            @RequestParam("postId") String postId) {
+        postService.deletePost(postId);
+        return ApiResponse.<Void>builder()
+                .message("Xóa bài viết thành công")
+                .build();
+    }
+
+    //Like Post
+    @PostMapping("/like")
+    public ApiResponse<Map<String, Object>> likePost(@RequestBody LikePostDTO likeDTO,
+                                                     @AuthenticationPrincipal Jwt jwt) throws Exception {
+        String userId = jwt.getSubject();
+        boolean like = postService.toggleLike(likeDTO.getPostId(), userId);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("like", like);
+        map.put("userId", userId);
+        return ApiResponse.<Map<String, Object>>builder()
+                .data(map)
+                .message(like ? "Thích bài viết thành công" : "bỏ thích bài viết thành công")
+                .build();
+    }
+
+    @PostMapping("/share")
+    public ApiResponse<PostDTO> sharePost(@Valid PostShareRequest share,
+                                          @AuthenticationPrincipal Jwt jwt) {
+        share.setUserId(jwt.getSubject());
+        PostDTO post = postService.sharePost(share);
+        return ApiResponse.<PostDTO>builder()
+                .data(post)
+                .statusCode(StatusCode.OK.getCode())
+                .message("Chia sẽ bài viết thành công")
+                .build();
+    }
 }

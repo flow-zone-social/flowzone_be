@@ -5,20 +5,18 @@ import com.fsocial.comment.internal.dto.LikeReplyCommentDTO;
 import com.fsocial.comment.internal.dto.ReplyCommentRequest;
 import com.fsocial.comment.internal.dto.ReplyCommentResponse;
 import com.fsocial.comment.internal.dto.ReplyCommentUpdateDTORequest;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.api.ActorSnapshotDTO;
+import com.fsocial.user.api.UserApi;
 import com.fsocial.comment.internal.entity.Comment;
 import com.fsocial.comment.internal.entity.CommentLike;
 import com.fsocial.comment.internal.entity.CommentMedia;
 import com.fsocial.media.api.MediaType;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
-import com.fsocial.user.internal.repository.AccountRepository;
 import com.fsocial.comment.internal.repository.CommentLikeRepository;
 import com.fsocial.comment.internal.repository.CommentRepository;
-import com.fsocial.user.internal.service.AccountService;
 import com.fsocial.comment.internal.service.ReplyCommentService;
-import com.fsocial.user.internal.util.DisplayNameUtils;
-import com.fsocial.media.internal.util.MediaUploadUtils;
+import com.fsocial.media.api.MediaApi;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -44,11 +42,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReplyCommentServiceImpl implements ReplyCommentService {
 
-    MediaUploadUtils mediaUploadUtils;
-    AccountService accountService;
+    MediaApi mediaApi;
+    UserApi userApi;
     CommentRepository commentRepository;
     CommentLikeRepository commentLikeRepository;
-    AccountRepository accountRepository;
 
     @Override
     @Transactional
@@ -56,10 +53,10 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
         Comment parent = commentRepository.findById(request.getCommentId()).orElseThrow(
                 () -> new AppException("Không tìm thấy comment ", StatusCode.COMMENT_NOT_FOUND));
 
-        MediaItemDTO[] mediaItems = mediaUploadUtils.uploadValidMedia(request.getMedia());
+        MediaItemDTO[] mediaItems = mediaApi.uploadValidMedia(request.getMedia());
 
         Comment reply = Comment.builder()
-                .postId(parent.getPostId())
+                .post(parent.getPost())
                 .parent(parent)
                 .userId(request.getUserId())
                 .text(request.getText())
@@ -69,7 +66,7 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
         attachMedia(reply, mediaItems);
         Comment saved = commentRepository.save(reply);
 
-        Account owner = accountRepository.findById(saved.getUserId()).orElse(null);
+        ActorSnapshotDTO owner = userApi.getOwners(List.of(saved.getUserId())).stream().findFirst().orElse(null);
         return toReplyCommentResponse(parent.getId(), saved, owner, 0, false);
     }
 
@@ -104,8 +101,8 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
         List<String> replyIds = replies.stream().map(Comment::getId).toList();
         List<String> ownerIds = replies.stream().map(Comment::getUserId).distinct().toList();
 
-        Map<String, Account> accountMap = accountRepository.findAllById(ownerIds).stream()
-                .collect(Collectors.toMap(Account::getId, Function.identity()));
+        Map<String, ActorSnapshotDTO> accountMap = userApi.getOwners(ownerIds).stream()
+                .collect(Collectors.toMap(ActorSnapshotDTO::getUserId, Function.identity()));
 
         Map<String, Integer> likeCountMap = commentLikeRepository.countByCommentIdIn(replyIds).stream()
                 .collect(Collectors.toMap(r -> (String) r[0], r -> ((Number) r[1]).intValue()));
@@ -133,7 +130,7 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
         reply.setHtml(updateReply.getHtml());
         Comment saved = commentRepository.save(reply);
 
-        Account owner = accountRepository.findById(saved.getUserId()).orElse(null);
+        ActorSnapshotDTO owner = userApi.getOwners(List.of(saved.getUserId())).stream().findFirst().orElse(null);
         String requesterId = currentUserId();
         return toReplyCommentResponse(saved.getParent().getId(), saved, owner,
                 commentLikeRepository.countByCommentId(saved.getId()),
@@ -162,7 +159,7 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
     }
 
     private boolean userExists(String userId) {
-        return accountService.existsById(userId);
+        return userApi.existsById(userId);
     }
 
     private boolean replyCommentExists(String replyCommentId) {
@@ -179,7 +176,7 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
         return comment;
     }
 
-    private ReplyCommentResponse toReplyCommentResponse(String commentId, Comment reply, Account owner,
+    private ReplyCommentResponse toReplyCommentResponse(String commentId, Comment reply, ActorSnapshotDTO owner,
                                                         int likeCount, boolean liked) {
         return ReplyCommentResponse.builder()
                 .id(reply.getId())
@@ -187,7 +184,7 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
                 .userId(reply.getUserId())
                 .content(CommentServiceImpl.buildContent(reply))
                 .countLikes(likeCount)
-                .displayName(DisplayNameUtils.build(owner))
+                .displayName(owner == null ? "" : owner.getDisplayName())
                 .avatar(owner == null ? null : owner.getAvatar())
                 .createDatetime(reply.getCreateDatetime())
                 .like(liked)

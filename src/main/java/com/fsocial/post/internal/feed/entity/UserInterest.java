@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 /**
  * Thay cho {@code UserInterests.interests[]} embedded của Mongo — mỗi tag một dòng,
@@ -42,20 +41,9 @@ public class UserInterest {
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
+    @EqualsAndHashCode
     public static class Key implements Serializable {
         private String userId;
         private String tag;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Key key)) return false;
-            return Objects.equals(userId, key.userId) && Objects.equals(tag, key.tag);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(userId, tag);
-        }
     }
 }

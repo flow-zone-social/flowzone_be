@@ -1,7 +1,6 @@
 package com.fsocial.shared.mail;
 
 import com.fsocial.shared.mail.MailInformation;
-import com.fsocial.shared.exception.AccountErrorCode;
 import com.fsocial.shared.mail.MailTemplate;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
@@ -45,7 +44,7 @@ public class MailUtils {
             javaMailSender.send(mimeMessage);
         } catch (MessagingException e) {
             log.error("Có lỗi xảy ra khi gửi mail: {}", e.getMessage());
-            throw new AppException(AccountErrorCode.UNCATEGORIZED_EXCEPTION);
+            throw new AppException(StatusCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 

@@ -28,4 +28,5 @@ public class AccountResponse {
     String bio;
     Set<String> follower = new HashSet<>();
     Set<String> following = new HashSet<>();
+    boolean isFollow;
 }

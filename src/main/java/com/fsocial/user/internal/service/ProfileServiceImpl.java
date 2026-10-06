@@ -11,7 +11,7 @@ import com.fsocial.user.internal.mapper.AccountMapper;
 import com.fsocial.user.internal.repository.AccountRepository;
 import com.fsocial.user.internal.repository.FollowRepository;
 import com.fsocial.user.internal.service.ProfileService;
-import com.fsocial.media.internal.service.UploadMedia;
+import com.fsocial.media.api.MediaApi;
 import com.fsocial.user.internal.util.DisplayNameUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class ProfileServiceImpl implements ProfileService {
     AccountRepository accountRepository;
     FollowRepository followRepository;
     AccountMapper accountMapper;
-    UploadMedia uploadMedia;
+    MediaApi mediaApi;
 
     @Override
     public ProfileResponse updateAvatar(MultipartFile file, String userId) {
@@ -88,6 +88,6 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     private String uploadImage(MultipartFile file, AttachmentType type) {
-        return uploadMedia.uploadSingleMedia(file, type).getUrl();
+        return mediaApi.uploadSingleMedia(file, type).getUrl();
     }
 }

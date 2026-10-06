@@ -1,7 +1,6 @@
 package com.fsocial.shared.exception;
 
 import com.fsocial.shared.response.ApiResponse;
-import com.fsocial.shared.exception.AccountValidErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.http.HttpStatus;
@@ -84,7 +83,7 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiResponse<Void>> handlingMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
         String enumKey = Objects.requireNonNull(exception.getFieldError()).getDefaultMessage();
         try {
-            AccountValidErrorCode errorCode = AccountValidErrorCode.valueOf(enumKey);
+            StatusCode errorCode = StatusCode.valueOf(enumKey);
             return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
                     .statusCode(errorCode.getCode())
                     .message(errorCode.getMessage())

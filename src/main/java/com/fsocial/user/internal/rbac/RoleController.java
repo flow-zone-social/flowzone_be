@@ -3,7 +3,7 @@ package com.fsocial.user.internal.rbac;
 import com.fsocial.shared.response.ApiResponse;
 import com.fsocial.user.internal.rbac.RoleCreationRequest;
 import com.fsocial.user.internal.rbac.RoleResponse;
-import com.fsocial.shared.exception.AccountErrorCode;
+import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.user.internal.rbac.RoleService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ public class RoleController {
     @PostMapping
     public ApiResponse<RoleResponse> createRole(@RequestBody RoleCreationRequest request) {
         return ApiResponse.<RoleResponse>builder()
-                .statusCode(AccountErrorCode.OK.getCode())
+                .statusCode(StatusCode.OK.getCode())
                 .message("Create new Role success.")
                 .data(roleService.createRole(request))
                 .build();
@@ -36,7 +36,7 @@ public class RoleController {
     @GetMapping
     public ApiResponse<List<RoleResponse>> getAllRole() {
         return ApiResponse.<List<RoleResponse>>builder()
-                .statusCode(AccountErrorCode.OK.getCode())
+                .statusCode(StatusCode.OK.getCode())
                 .message("Get all Role success.")
                 .data(roleService.getAllRoles())
                 .build();
@@ -46,7 +46,7 @@ public class RoleController {
     @PutMapping("/{roleId}")
     public ApiResponse<RoleResponse> updateRole(@PathVariable String roleId, @RequestBody Set<String> permissions) {
         return ApiResponse.<RoleResponse>builder()
-                .statusCode(AccountErrorCode.OK.getCode())
+                .statusCode(StatusCode.OK.getCode())
                 .message("Update role success.")
                 .data(roleService.updateRole(roleId, permissions))
                 .build();
@@ -57,7 +57,7 @@ public class RoleController {
     public ApiResponse<Void> deleteRole(@PathVariable String roleId) {
         roleService.deleteRole(roleId);
         return ApiResponse.<Void>builder()
-                .statusCode(AccountErrorCode.OK.getCode())
+                .statusCode(StatusCode.OK.getCode())
                 .message("Delete role success.")
                 .build();
     }

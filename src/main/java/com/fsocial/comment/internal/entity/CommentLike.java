@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Getter
 @Setter
@@ -41,20 +40,9 @@ public class CommentLike {
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
+    @EqualsAndHashCode
     public static class Key implements Serializable {
         private String commentId;
         private String userId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Key key)) return false;
-            return Objects.equals(commentId, key.commentId) && Objects.equals(userId, key.userId);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(commentId, userId);
-        }
     }
 }

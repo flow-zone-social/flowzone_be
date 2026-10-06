@@ -31,6 +31,17 @@ public interface PostLikeRepository extends JpaRepository<PostLike, PostLike.Key
     @Query("select l.postId from PostLike l where l.userId = :userId and l.postId in :postIds")
     List<String> findLikedPostIds(@Param("userId") String userId, @Param("postIds") List<String> postIds);
 
+    /**
+     * Gộp countByPostIdIn + findLikedPostIds thành 1 truy vấn: [postId, count, likedByRequester(0/1)].
+     * requesterId null vẫn an toàn: so sánh với null luôn UNKNOWN nên cột liked trả về 0.
+     */
+    @Query("""
+            select l.postId, count(l), sum(case when l.userId = :requesterId then 1 else 0 end)
+            from PostLike l where l.postId in :postIds group by l.postId
+            """)
+    List<Object[]> countAndLikedByPostIdIn(@Param("requesterId") String requesterId,
+                                           @Param("postIds") List<String> postIds);
+
     @Modifying
     @Query("delete from PostLike l where l.postId = :postId")
     int deleteByPostId(@Param("postId") String postId);

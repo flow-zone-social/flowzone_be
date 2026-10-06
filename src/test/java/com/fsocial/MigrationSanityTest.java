@@ -99,16 +99,15 @@ class MigrationSanityTest {
         postLikeRepository.saveAndFlush(new PostLike(post.getId(), owner.getId()));
 
         Comment root = commentRepository.saveAndFlush(
-                Comment.builder().postId(post.getId()).userId(owner.getId()).text("root").build());
+                Comment.builder().post(post).userId(owner.getId()).text("root").build());
 
         postRepository.delete(post);
         postRepository.flush();
 
         assertThat(mediaCount(post.getId())).isZero();
         assertThat(postLikeRepository.existsById(new PostLike.Key(post.getId(), owner.getId()))).isFalse();
-        // comment.post_id has no FK to post (plain string column) so it survives — only
-        // the CommentConsumer (RabbitMQ) deletes it out-of-band. Assert it's still there.
-        assertThat(commentRepository.findById(root.getId())).isPresent();
+        // comment.post_id has a real FK with ON DELETE CASCADE now, so it's deleted with the post.
+        assertThat(commentRepository.findById(root.getId())).isEmpty();
     }
 
     @Test
@@ -117,11 +116,11 @@ class MigrationSanityTest {
         Post post = postRepository.save(Post.builder().owner(owner).text("hello").build());
 
         Comment root = commentRepository.saveAndFlush(
-                Comment.builder().postId(post.getId()).userId(owner.getId()).text("root").build());
+                Comment.builder().post(post).userId(owner.getId()).text("root").build());
         commentRepository.saveAndFlush(
-                Comment.builder().postId(post.getId()).userId(owner.getId()).parent(root).text("reply1").build());
+                Comment.builder().post(post).userId(owner.getId()).parent(root).text("reply1").build());
         commentRepository.saveAndFlush(
-                Comment.builder().postId(post.getId()).userId(owner.getId()).parent(root).text("reply2").build());
+                Comment.builder().post(post).userId(owner.getId()).parent(root).text("reply2").build());
 
         List<Comment> roots = commentRepository.findByPostId(post.getId());
 

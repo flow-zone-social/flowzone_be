@@ -64,6 +64,12 @@ public class AttachmentsServiceImpl implements AttachmentsService {
     }
 
     @Override
+    public Attachments findById(String attachmentId) {
+        return attachmentsRepository.findById(attachmentId)
+                .orElseThrow(() -> new AppException(StatusCode.FILE_NOT_FOUND));
+    }
+
+    @Override
     public ApiDataCursor<AttachementProfileDTO> getAttachmentByOwnerId(AttachmentsRequest dto, String userId) {
 
 

@@ -4,7 +4,7 @@ import com.fsocial.user.internal.rbac.RoleCreationRequest;
 import com.fsocial.user.internal.rbac.RoleResponse;
 import com.fsocial.user.internal.rbac.Permission;
 import com.fsocial.user.internal.rbac.Role;
-import com.fsocial.shared.exception.AccountErrorCode;
+import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.user.internal.rbac.RoleMapper;
 import com.fsocial.user.internal.rbac.PermissionRepository;
@@ -46,7 +46,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleResponse updateRole(String roleId, Set<String> newPermissions) {
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new AppException(AccountErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new AppException(StatusCode.NOT_FOUND));
 
         var permissions = permissionRepository.findAllById(newPermissions);
         Set<Permission> permissionSet = role.getPermissions() != null ? role.getPermissions() : new HashSet<>();

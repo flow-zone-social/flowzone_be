@@ -5,20 +5,18 @@ import com.fsocial.complaint.internal.dto.ComplaintStatisticsLongDayDTO;
 import com.fsocial.complaint.internal.dto.ComplaintDTO;
 import com.fsocial.complaint.internal.dto.ComplaintDTOResponse;
 import com.fsocial.notification.internal.dto.NotificationDTO;
-import com.fsocial.user.internal.dto.AccountResponse;
+import com.fsocial.user.api.ActorSnapshotDTO;
+import com.fsocial.user.api.UserApi;
 import com.fsocial.complaint.internal.entity.Complaint;
 import com.fsocial.complaint.internal.entity.ComplaintDetail;
-import com.fsocial.termofservice.internal.entity.TermOfServices;
+import com.fsocial.termofservice.api.TermOfServiceApi;
+import com.fsocial.termofservice.api.TermSummary;
 import com.fsocial.notification.api.NotificationType;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.complaint.internal.mapper.ComplantMapper;
 import com.fsocial.notification.api.NotificationEvent;
-import com.fsocial.user.internal.repository.AccountRepository;
 import com.fsocial.complaint.internal.repository.ComplaintRepository;
-import com.fsocial.termofservice.internal.repository.TermRepository;
-import com.fsocial.user.internal.client.ProfileClient;
-import com.fsocial.user.internal.service.AccountService;
 import com.fsocial.complaint.internal.service.ComplaintService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -40,13 +38,9 @@ public class ComplainServiceImpl implements ComplaintService {
 
     ComplantMapper complantMapper;
 
-    TermRepository termRepository;
+    TermOfServiceApi termOfServiceApi;
 
-    ProfileClient profileClient;
-
-    AccountRepository accountRepository;
-
-    AccountService accountService;
+    UserApi userApi;
 
     NotificationEvent notificationEvent;
 
@@ -168,17 +162,16 @@ public class ComplainServiceImpl implements ComplaintService {
 
     private ComplaintDTOResponse mapToComplainResponse(Complaint complaint, ComplaintDetail detail) {
         String reportedByUserId = detail != null ? detail.getUserId() : null;
-        AccountResponse profileResponse = getProfile(reportedByUserId);
+        ActorSnapshotDTO profileResponse = getProfile(reportedByUserId);
         String termName = null;
         if (detail != null && detail.getTermOfServiceId() != null) {
-            TermOfServices term = termRepository.findById(detail.getTermOfServiceId()).orElseThrow(
-                    () -> new AppException("Không tìm thấy chính sách", StatusCode.TERM_OF_SERVICE_NOT_FOUND));
+            TermSummary term = termOfServiceApi.findSummaryById(detail.getTermOfServiceId());
             termName = term.getName();
         }
         return ComplaintDTOResponse.builder()
                 .id(complaint.getId())
                 .targetId(complaint.getTargetId())
-                .profileId(profileResponse.getId())
+                .profileId(profileResponse.getUserId())
                 .complaintType(complaint.getComplaintType())
                 .isRead(complaint.isRead())
                 .termOfService(termName)
@@ -189,9 +182,9 @@ public class ComplainServiceImpl implements ComplaintService {
                 .build();
     }
 
-    public AccountResponse getProfile(String userId) {
+    public ActorSnapshotDTO getProfile(String userId) {
         try {
-            return accountService.getProfile(userId);
+            return userApi.getOwner(userId);
         } catch (Exception e) {
             throw new AppException("Không tìm thấy thông tin người dùng: " + userId, StatusCode.USER_NOT_FOUND);
         }

@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 /**
  * Đánh giá của 1 user cho 1 FAQ (mỗi user chỉ 1 đánh giá / FAQ, đánh giá lại sẽ ghi đè).
@@ -45,20 +44,9 @@ public class FaqRating {
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
+    @EqualsAndHashCode
     public static class Key implements Serializable {
         private String faqId;
         private String userId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Key key)) return false;
-            return Objects.equals(faqId, key.faqId) && Objects.equals(userId, key.userId);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(faqId, userId);
-        }
     }
 }

@@ -3,7 +3,7 @@ package com.fsocial.auth.internal.service;
 import com.fsocial.auth.internal.dto.EmailRequest;
 import com.fsocial.auth.internal.dto.OtpRequest;
 import com.fsocial.shared.mail.MailInformation;
-import com.fsocial.shared.exception.AccountErrorCode;
+import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.shared.redis.RedisKeyType;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.auth.internal.service.OtpService;
@@ -56,11 +56,11 @@ public class OtpServiceImpl implements OtpService {
 
         if (storedOtp == null) {
             log.warn("OTP không tồn tại hoặc đã hết hạn cho email: {}", email);
-            throw new AppException(AccountErrorCode.OTP_INVALID);
+            throw new AppException(StatusCode.OTP_INVALID);
         }
         if (!storedOtp.equals(otp)) {
             log.warn("OTP không hợp lệ cho email: {}", email);
-            throw new AppException(AccountErrorCode.OTP_INVALID);
+            throw new AppException(StatusCode.OTP_INVALID);
         }
 
         redisTemplate.opsForValue().set(redisKey, RedisKeyType.VALUE_AFTER_VERIFY.getType(), durationVerify, TimeUnit.SECONDS);
@@ -77,7 +77,7 @@ public class OtpServiceImpl implements OtpService {
         String value = redisTemplate.opsForValue().get(redisKey);
         if (!RedisKeyType.VALUE_AFTER_VERIFY.getType().equals(value)) {
             log.warn("Email chưa được xác thực: {}", email);
-            throw new AppException(AccountErrorCode.UNAUTHENTICATED);
+            throw new AppException(StatusCode.UNAUTHENTICATED);
         }
     }
 
@@ -94,7 +94,7 @@ public class OtpServiceImpl implements OtpService {
     private String checkKeyPrefix(String type) {
         if (!type.equals(RedisKeyType.REGISTER.getType()) && !type.equals(RedisKeyType.RESET.getType())) {
             log.error("Sai loại yêu cầu: {}", type);
-            throw new AppException(AccountErrorCode.UNCATEGORIZED_EXCEPTION);
+            throw new AppException(StatusCode.UNCATEGORIZED_EXCEPTION);
         }
         return type.equals(RedisKeyType.REGISTER.getType())
                 ? RedisKeyType.REGISTER.getRedisKeyPrefix()

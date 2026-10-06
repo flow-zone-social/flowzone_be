@@ -1,15 +1,13 @@
 package com.fsocial.user.internal.controller;
 
 import com.fsocial.shared.response.ApiResponse;
-import com.fsocial.user.internal.dto.FollowRequest;
 import com.fsocial.user.internal.dto.ChangePasswordRequest;
 import com.fsocial.user.internal.dto.AccountResponse;
 import com.fsocial.user.internal.dto.AccountStatisticRegisterDTO;
 import com.fsocial.user.internal.dto.AccountStatisticRegisterLongDateDTO;
 import com.fsocial.user.internal.dto.ManageUserResponse;
 import com.fsocial.shared.response.SearchPageResponse;
-import com.fsocial.shared.exception.AccountResponseStatus;
-import com.fsocial.shared.response.ResponseStatus;
+import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.user.internal.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -26,7 +24,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -40,8 +37,8 @@ public class AccountController {
     @GetMapping("/{userId}")
     public ApiResponse<AccountResponse> getAccount(@PathVariable String userId) {
         return ApiResponse.<AccountResponse>builder()
-                .statusCode(AccountResponseStatus.SUCCESS.getCODE())
-                .message(AccountResponseStatus.SUCCESS.getMessage())
+                .statusCode(StatusCode.SUCCESS.getCode())
+                .message(StatusCode.SUCCESS.getMessage())
                 .data(accountService.getUser(userId))
                 .build();
     }
@@ -53,8 +50,8 @@ public class AccountController {
     ) {
         accountService.changePassword(jwt.getSubject(), request.getOldPassword(), request.getNewPassword());
         return ApiResponse.<Void>builder()
-                .statusCode(AccountResponseStatus.PASSWORD_CHANGED.getCODE())
-                .message(AccountResponseStatus.PASSWORD_CHANGED.getMessage())
+                .statusCode(StatusCode.PASSWORD_CHANGED.getCode())
+                .message(StatusCode.PASSWORD_CHANGED.getMessage())
                 .build();
     }
 
@@ -113,7 +110,6 @@ public class AccountController {
 
     @GetMapping("/profile")
     public ApiResponse<AccountResponse> getProfile(@AuthenticationPrincipal Jwt jwt){
-
         return ApiResponse.<AccountResponse>builder()
                 .data(accountService.getProfile(jwt.getSubject()))
                 .message("Lấy thông tin tài khoản thành công")
@@ -131,42 +127,4 @@ public class AccountController {
                 .build();
     }
 
-    @PostMapping("/follow")
-    public ApiResponse<Void> follow(@RequestBody @Valid FollowRequest request,
-                                    @AuthenticationPrincipal Jwt jwt
-                                    ) {
-        accountService.follow(jwt.getSubject(), request.getFollowing());
-        return ApiResponse.<Void>builder()
-                .statusCode(ResponseStatus.SUCCESS.getCODE())
-                .message(ResponseStatus.SUCCESS.getMessage())
-                .build();
-    }
-
-    @PostMapping("/unfollow")
-    public ApiResponse<Void> unfollow(@RequestBody @Valid FollowRequest request,
-                                      @AuthenticationPrincipal Jwt jwt) {
-        accountService.unfollow(jwt.getSubject(), request.getFollowing());
-        return ApiResponse.<Void>builder()
-                .statusCode(ResponseStatus.SUCCESS.getCODE())
-                .message(ResponseStatus.SUCCESS.getMessage())
-                .build();
-    }
-
-    @GetMapping("/followers/{userId}")
-    public ApiResponse<Set<String>> getFollowers(@AuthenticationPrincipal Jwt jwt) {
-        return ApiResponse.<Set<String>>builder()
-                .statusCode(ResponseStatus.SUCCESS.getCODE())
-                .message(ResponseStatus.SUCCESS.getMessage())
-                .data(accountService.getFollowers(jwt.getSubject()))
-                .build();
-    }
-
-    @GetMapping("/followings/{userId}")
-    public ApiResponse<Set<String>> getFollowings(@AuthenticationPrincipal Jwt jwt) {
-        return ApiResponse.<Set<String>>builder()
-                .statusCode(ResponseStatus.SUCCESS.getCODE())
-                .message(ResponseStatus.SUCCESS.getMessage())
-                .data(accountService.getFollowing(jwt.getSubject()))
-                .build();
-    }
 }

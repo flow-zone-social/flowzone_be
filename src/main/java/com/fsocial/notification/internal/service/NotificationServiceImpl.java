@@ -1,19 +1,17 @@
 package com.fsocial.notification.internal.service;
 
 import com.fsocial.user.api.ActorSnapshotDTO;
+import com.fsocial.user.api.UserApi;
 import com.fsocial.shared.response.ApiResponse;
 import com.fsocial.notification.internal.dto.NoticeRequest;
 import com.fsocial.notification.internal.dto.NotificationCursorResponse;
 import com.fsocial.notification.internal.dto.NotificationDTO;
 import com.fsocial.notification.internal.dto.NotificationResponse;
-import com.fsocial.user.internal.entity.Account;
 import com.fsocial.notification.internal.entity.Notification;
 import com.fsocial.notification.internal.enums.NotificationConst;
 import com.fsocial.notification.api.NotificationType;
-import com.fsocial.user.internal.repository.AccountRepository;
 import com.fsocial.notification.internal.repository.NotificationRepository;
 import com.fsocial.notification.internal.service.NotificaitonService;
-import com.fsocial.user.internal.util.DisplayNameUtils;
 import com.fsocial.shared.util.DateUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +41,7 @@ public class NotificationServiceImpl implements NotificaitonService {
 
     RestTemplate restTemplate;
     NotificationRepository notificationRepository;
-    AccountRepository accountRepository;
+    UserApi userApi;
 
     @NonFinal
     @Value("${app.services.notification}")
@@ -85,7 +83,10 @@ public class NotificationServiceImpl implements NotificaitonService {
 
     private String displayNameOf(String senderId) {
         if (senderId == null) return "";
-        return accountRepository.findById(senderId).map(DisplayNameUtils::build).orElse("");
+        return userApi.getOwners(List.of(senderId)).stream()
+                .map(ActorSnapshotDTO::getDisplayName)
+                .findFirst()
+                .orElse("");
     }
 
     static final int PAGE_SIZE = 10;
@@ -158,28 +159,18 @@ public class NotificationServiceImpl implements NotificaitonService {
                 .distinct()
                 .toList();
 
-        Map<String, Account> accountMap = accountRepository.findAllById(senderIds).stream()
-                .collect(Collectors.toMap(Account::getId, Function.identity()));
+        Map<String, ActorSnapshotDTO> accountMap = userApi.getOwners(senderIds).stream()
+                .collect(Collectors.toMap(ActorSnapshotDTO::getUserId, Function.identity()));
 
         for (NotificationResponse n : items) {
-            n.setActor(toActorSnapshot(accountMap.get(n.getSenderId())));
+            n.setActor(accountMap.get(n.getSenderId()));
             if (n.getAggregatedSenderIds() != null) {
                 n.setAggregatedActors(n.getAggregatedSenderIds().stream()
                         .map(accountMap::get)
-                        .map(this::toActorSnapshot)
                         .filter(java.util.Objects::nonNull)
                         .toList());
             }
         }
-    }
-
-    private ActorSnapshotDTO toActorSnapshot(Account account) {
-        if (account == null) return null;
-        return ActorSnapshotDTO.builder()
-                .userId(account.getId())
-                .displayName(DisplayNameUtils.build(account))
-                .avatar(account.getAvatar())
-                .build();
     }
 
     @Override

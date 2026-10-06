@@ -7,7 +7,7 @@ import com.fsocial.user.internal.dto.AccountResponse;
 import com.fsocial.auth.internal.dto.AuthenticationResponse;
 import com.fsocial.user.internal.dto.DuplicationResponse;
 import com.fsocial.auth.internal.dto.IntrospectResponse;
-import com.fsocial.shared.exception.AccountResponseStatus;
+import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.user.internal.service.AccountService;
 import com.fsocial.auth.internal.service.AuthenticationService;
 import com.fsocial.auth.internal.service.OtpService;
@@ -46,8 +46,8 @@ public class AuthenticateController {
     @PostMapping("/introspect")
     public ApiResponse<IntrospectResponse> introspect(@RequestBody @Valid TokenRequest token) {
         return ApiResponse.<IntrospectResponse>builder()
-                .statusCode(AccountResponseStatus.SUCCESS.getCODE())
-                .message(AccountResponseStatus.SUCCESS.getMessage())
+                .statusCode(StatusCode.SUCCESS.getCode())
+                .message(StatusCode.SUCCESS.getMessage())
                 .data(authenticationService.introspect(token.getToken()))
                 .build();
     }
@@ -57,8 +57,8 @@ public class AuthenticateController {
             @RequestHeader("User-Agent") String userAgent,
             HttpServletRequest httpRequest) {
         return ApiResponse.<AuthenticationResponse>builder()
-                .statusCode(AccountResponseStatus.SUCCESS.getCODE())
-                .message(AccountResponseStatus.SUCCESS.getMessage())
+                .statusCode(StatusCode.SUCCESS.getCode())
+                .message(StatusCode.SUCCESS.getMessage())
                 .data(authenticationService.login(request, userAgent, httpRequest))
                 .build();
     }
@@ -68,8 +68,8 @@ public class AuthenticateController {
             @RequestHeader("User-Agent") String userAgent,
             HttpServletRequest httpRequest) {
         return ApiResponse.<AuthenticationResponse>builder()
-                .statusCode(AccountResponseStatus.SUCCESS.getCODE())
-                .message(AccountResponseStatus.SUCCESS.getMessage())
+                .statusCode(StatusCode.SUCCESS.getCode())
+                .message(StatusCode.SUCCESS.getMessage())
                 .data(refreshTokenService.refreshAccessToken(request.getRefreshToken(), userAgent, httpRequest.getRemoteAddr()))
                 .build();
     }
@@ -80,8 +80,8 @@ public class AuthenticateController {
         SecurityContextHolder.clearContext();
         httpRequest.getSession().invalidate();
         return ApiResponse.builder()
-                .statusCode(AccountResponseStatus.SUCCESS.getCODE())
-                .message(AccountResponseStatus.SUCCESS.getMessage())
+                .statusCode(StatusCode.SUCCESS.getCode())
+                .message(StatusCode.SUCCESS.getMessage())
                 .build();
     }
 
@@ -90,16 +90,16 @@ public class AuthenticateController {
     public ApiResponse<Void> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         accountService.resetPassword(request.getEmail(), request.getNewPassword());
         return ApiResponse.<Void>builder()
-                .statusCode(AccountResponseStatus.PASSWORD_RESET_SUCCESS.getCODE())
-                .message(AccountResponseStatus.PASSWORD_RESET_SUCCESS.getMessage())
+                .statusCode(StatusCode.PASSWORD_RESET_SUCCESS.getCode())
+                .message(StatusCode.PASSWORD_RESET_SUCCESS.getMessage())
                 .build();
     }
 
     @PostMapping("/register")
     public ApiResponse<AccountResponse> persistAccount(@RequestBody @Valid AccountRegisterRequest request) {
         return ApiResponse.<AccountResponse>builder()
-                .statusCode(AccountResponseStatus.ACCOUNT_REGISTERED.getCODE())
-                .message(AccountResponseStatus.ACCOUNT_REGISTERED.getMessage())
+                .statusCode(StatusCode.ACCOUNT_REGISTERED.getCode())
+                .message(StatusCode.ACCOUNT_REGISTERED.getMessage())
                 .data(accountService.persistAccount(request))
                 .build();
     }
@@ -107,8 +107,8 @@ public class AuthenticateController {
     public ApiResponse<Void> sendOtp(@RequestBody @Valid EmailRequest request) {
         otpService.sortTypeForSendOtp(request);
         return ApiResponse.<Void>builder()
-                .statusCode(AccountResponseStatus.OTP_SENT.getCODE())
-                .message(AccountResponseStatus.OTP_SENT.getMessage())
+                .statusCode(StatusCode.OTP_SENT.getCode())
+                .message(StatusCode.OTP_SENT.getMessage())
                 .build();
     }
 
@@ -116,8 +116,8 @@ public class AuthenticateController {
     public ApiResponse<Void> verifyOtp(@RequestBody @Valid OtpRequest request) {
         otpService.sortTypeForVerifyOtp(request);
         return ApiResponse.<Void>builder()
-                .statusCode(AccountResponseStatus.OTP_VALID.getCODE())
-                .message(AccountResponseStatus.OTP_VALID.getMessage())
+                .statusCode(StatusCode.OTP_VALID.getCode())
+                .message(StatusCode.OTP_VALID.getMessage())
                 .build();
     }
 
@@ -136,8 +136,8 @@ public class AuthenticateController {
             ){
 
         return ApiResponse.<AuthenticationResponse>builder()
-                .statusCode(AccountResponseStatus.SUCCESS.getCODE())
-                .message(AccountResponseStatus.SUCCESS.getMessage())
+                .statusCode(StatusCode.SUCCESS.getCode())
+                .message(StatusCode.SUCCESS.getMessage())
                 .data(authenticationService.loginWithGoogle(request, userAgent, httpRequest))
                 .build();
     }

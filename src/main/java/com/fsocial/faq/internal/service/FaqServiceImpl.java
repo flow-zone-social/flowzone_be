@@ -1,9 +1,12 @@
 package com.fsocial.faq.internal.service;
 
+import com.fsocial.faq.api.FaqApi;
+import com.fsocial.faq.api.FaqContent;
 import com.fsocial.faq.internal.dto.FaqDTO;
 import com.fsocial.faq.internal.dto.FaqRatingRequest;
 import com.fsocial.faq.internal.dto.FaqRatingStatsDTO;
 import com.fsocial.faq.internal.dto.FaqRequest;
+import com.fsocial.media.api.MediaApi;
 import com.fsocial.media.internal.entity.Attachments;
 import com.fsocial.faq.internal.entity.Faq;
 import com.fsocial.faq.internal.entity.FaqRating;
@@ -12,7 +15,6 @@ import com.fsocial.faq.internal.enums.FaqType;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.faq.internal.mapper.FaqMapper;
-import com.fsocial.media.internal.repository.AttachmentsRepository;
 import com.fsocial.faq.internal.repository.FaqRatingRepository;
 import com.fsocial.faq.internal.repository.FaqRepository;
 import com.fsocial.faq.internal.repository.FaqViewRepository;
@@ -29,12 +31,12 @@ import java.util.List;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-public class FaqServiceImpl implements FaqService {
+public class FaqServiceImpl implements FaqService, FaqApi {
 
     FaqRepository faqRepository;
     FaqViewRepository faqViewRepository;
     FaqRatingRepository faqRatingRepository;
-    AttachmentsRepository attachmentsRepository;
+    MediaApi mediaApi;
     FaqMapper faqMapper;
 
     @Override
@@ -72,6 +74,18 @@ public class FaqServiceImpl implements FaqService {
     }
 
     @Override
+    public List<FaqContent> findAllContents() {
+        return faqRepository.findAll().stream()
+                .map(faq -> FaqContent.builder()
+                        .name(faq.getName())
+                        .description(faq.getDescription())
+                        .content(faq.getContent())
+                        .type(faq.getType().name())
+                        .build())
+                .toList();
+    }
+
+    @Override
     public List<FaqDTO> getAllFaqs() {
         return faqMapper.toListDTO(faqRepository.findAll()).stream()
                 .map(this::withStats)
@@ -105,8 +119,7 @@ public class FaqServiceImpl implements FaqService {
         if (attachmentId == null || attachmentId.isBlank()) {
             return null;
         }
-        return attachmentsRepository.findById(attachmentId)
-                .orElseThrow(() -> new AppException(StatusCode.FILE_NOT_FOUND));
+        return mediaApi.findById(attachmentId);
     }
 
     private FaqDTO enrich(Faq faq) {

@@ -1,5 +1,7 @@
 package com.fsocial.termofservice.internal.service;
 
+import com.fsocial.termofservice.api.TermOfServiceApi;
+import com.fsocial.termofservice.api.TermSummary;
 import com.fsocial.termofservice.internal.dto.TermOfServiceDTO;
 import com.fsocial.termofservice.internal.entity.TermOfServices;
 import com.fsocial.shared.exception.AppException;
@@ -17,7 +19,7 @@ import java.util.List;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor()
-public class TermOfServicesServiceImpl implements TermOfServicesService {
+public class TermOfServicesServiceImpl implements TermOfServicesService, TermOfServiceApi {
 
     TermRepository termRepository;
     TermOfServiceMapper termOfServiceMapper;
@@ -49,6 +51,16 @@ public class TermOfServicesServiceImpl implements TermOfServicesService {
     public String deleteTermOfService(String termOfServiceId) {
          termRepository.deleteById(termOfServiceId);
         return "Xóa chính sách thành công";
+    }
+
+    @Override
+    public TermSummary findSummaryById(String id) {
+        TermOfServices term = termRepository.findById(id).orElseThrow(
+                () -> new AppException("Không tìm thấy chính sách", StatusCode.TERM_OF_SERVICE_NOT_FOUND));
+        return TermSummary.builder()
+                .id(term.getId())
+                .name(term.getName())
+                .build();
     }
 
 }

@@ -4,7 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum AMQPConst {
-    POST_COMMENT_DELETE("post.delete.exchange", "post.comment.delete.queue", ""),
     POST_ATTACHMENTS_DELETE("post.delete.exchange", "post.attachments.delete.queue", ""),
     SCORE_UPDATE("interaction.fanout.exchange", "score.update.queue", ""),
     INTEREST_UPDATE("interaction.fanout.exchange", "interest.update.queue", ""),

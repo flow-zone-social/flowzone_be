@@ -1,6 +1,7 @@
 package com.fsocial.chat.internal.service;
 
 import com.fsocial.user.api.ActorSnapshotDTO;
+import com.fsocial.user.api.UserApi;
 import com.fsocial.chat.internal.dto.ConversationMemberDTO;
 import com.fsocial.chat.internal.dto.*;
 import com.fsocial.chat.internal.entity.Conversation;
@@ -48,6 +49,7 @@ public class ChatServiceImpl implements ChatService {
     ConversationMemberRepository conversationMemberRepository;
     MessageRepository messageRepository;
     AccountRepository accountRepository;
+    UserApi userApi;
     ChatMapper chatMapper;
     private final OnlineServiceImpl onlineServiceImpl;
 
@@ -95,7 +97,7 @@ public class ChatServiceImpl implements ChatService {
         ConversationDTO dto = chatMapper.toConversationDTO(conversation);
 
         List<String> memberIds = conversationMemberRepository.findUserIdsByConversationId(conversation.getId());
-        dto.setMembers(accountRepository.findOwnersByIdIn(memberIds));
+        dto.setMembers(userApi.getOwners(memberIds));
 
         Message last = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conversation.getId());
         dto.setLastMessage(last == null ? null : chatMapper.toMessageDTO(last));
@@ -157,7 +159,7 @@ public class ChatServiceImpl implements ChatService {
                 : findAfterCursor(conversationId, cursor, pageable);
 
         List<String> senderIds = messages.stream().map(m -> m.getSender().getId()).distinct().toList();
-        Map<String, ActorSnapshotDTO> senderById = accountRepository.findOwnersByIdIn(senderIds).stream()
+        Map<String, ActorSnapshotDTO> senderById = userApi.getOwners(senderIds).stream()
                 .collect(java.util.stream.Collectors.toMap(ActorSnapshotDTO::getUserId, a -> a));
 
         return messages.stream()

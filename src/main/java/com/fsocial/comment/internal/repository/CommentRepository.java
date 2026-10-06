@@ -13,19 +13,19 @@ import java.util.Optional;
 public interface CommentRepository extends JpaRepository<Comment, String> {
 
     /** Chỉ comment gốc (parent_id IS NULL) — reply lấy qua {@link #findByParentId}. */
-    @Query("select c from Comment c where c.postId = :postId and c.parent is null order by c.createDatetime asc")
+    @Query("select c from Comment c where c.post.id = :postId and c.parent is null order by c.createDatetime asc")
     List<Comment> findByPostId(@Param("postId") String postId);
 
-    @Query("select count(c) from Comment c where c.postId = :postId and c.parent is null")
+    @Query("select count(c) from Comment c where c.post.id = :postId and c.parent is null")
     Integer countByPostId(@Param("postId") String postId);
 
     @Query("select c from Comment c where c.parent.id = :parentId order by c.createDatetime asc")
     List<Comment> findByParentId(@Param("parentId") String parentId);
 
     @Query("""
-            select c.postId, count(c) from Comment c
-            where c.postId in :postIds and c.parent is null
-            group by c.postId
+            select c.post.id, count(c) from Comment c
+            where c.post.id in :postIds and c.parent is null
+            group by c.post.id
             """)
     List<Object[]> countByPostIdInRaw(@Param("postIds") List<String> postIds);
 
@@ -35,7 +35,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
                 .toList();
     }
 
-    @Query("select c.postId from Comment c where c.id = :commentId")
+    @Query("select c.post.id from Comment c where c.id = :commentId")
     Optional<String> findPostIdById(@Param("commentId") String commentId);
 
     /** Số reply của từng comment gốc trong 1 truy vấn: [parentId, count]. */
@@ -44,8 +44,6 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
 
     /** True chỉ khi id tồn tại VÀ là reply (có parent). */
     boolean existsByIdAndParentIsNotNull(String id);
-
-    void deleteByPostId(String postId);
 
     record PostCommentCount(String _id, Integer count) {}
 }

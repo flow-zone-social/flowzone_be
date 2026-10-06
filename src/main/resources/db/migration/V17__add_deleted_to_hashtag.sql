@@ -1,0 +1,1 @@
+ALTER TABLE hashtag ADD COLUMN deleted BOOLEAN NOT NULL DEFAULT false;

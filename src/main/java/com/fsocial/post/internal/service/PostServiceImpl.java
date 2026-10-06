@@ -1,5 +1,6 @@
 package com.fsocial.post.internal.service;
 
+import com.fsocial.post.internal.dto.*;
 import com.fsocial.shared.response.ApiDataCursor;
 import com.fsocial.notification.internal.dto.NotificationDTO;
 
@@ -15,11 +16,10 @@ import com.fsocial.post.internal.mapper.PostMapper;
 import com.fsocial.post.internal.feed.publisher.InteractionEventPublisher;
 import com.fsocial.notification.api.NotificationEvent;
 
-import com.fsocial.media.internal.service.AttachmentsService;
+import com.fsocial.media.api.MediaApi;
 import com.fsocial.post.internal.feed.service.FeedService;
 import com.fsocial.post.internal.service.PostService;
 import com.fsocial.shared.redis.RedisService;
-import com.fsocial.media.internal.util.MediaUploadUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -37,16 +37,11 @@ import java.util.stream.Collectors;
 import static com.fsocial.post.internal.util.PostUtils.buildPostResponse;
 import com.fsocial.comment.internal.repository.CommentRepository;
 import com.fsocial.media.api.MediaItemDTO;
-import com.fsocial.post.internal.dto.PostDTO;
-import com.fsocial.post.internal.dto.PostDTORequest;
-import com.fsocial.post.internal.dto.PostResponse;
-import com.fsocial.post.internal.dto.PostShareDTORequest;
-import com.fsocial.post.internal.dto.PostStatisticsDTO;
-import com.fsocial.post.internal.dto.PostStatisticsLongDateDTO;
 import com.fsocial.post.internal.repository.PostLikeRepository;
 import com.fsocial.post.internal.repository.PostRepository;
+import com.fsocial.user.api.ActorSnapshotDTO;
+import com.fsocial.user.api.UserApi;
 import com.fsocial.user.internal.repository.AccountRepository;
-import com.fsocial.user.internal.repository.FollowRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -57,19 +52,18 @@ public class PostServiceImpl implements PostService {
     PostLikeRepository postLikeRepository;
     AccountRepository accountRepository;
     CommentRepository commentRepository;
-    FollowRepository followRepository;
-    MediaUploadUtils mediaUploadUtils;
+    UserApi userApi;
+    MediaApi mediaApi;
     PostMapper postMapper;
     RedisService redisService;
     FeedService feedService;
     InteractionEventPublisher interactionEventPublisher;
     NotificationEvent notificationEvent;
-    AttachmentsService attachmentsService;
 
     @Override
     @Transactional
-    public PostDTO createPost(PostDTORequest postRequest) {
-        MediaItemDTO[] mediaItems = mediaUploadUtils.uploadValidMedia(postRequest.getMedia(), AttachmentType.POST);
+    public PostDTO createPost(PostRequest postRequest) {
+        MediaItemDTO[] mediaItems = mediaApi.uploadValidMedia(postRequest.getMedia(), AttachmentType.POST);
         Account owner = accountRepository.findById(postRequest.getUserId())
                 .orElseThrow(() -> new AppException("Không tìm thấy người dùng", StatusCode.USER_NOT_FOUND));
         try {
@@ -92,7 +86,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostDTO updatePost(PostDTORequest post, String postId) {
+    public PostDTO updatePost(PostUpdated post, String postId) {
         Post existingPost = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException("Post not found", StatusCode.POST_NOT_FOUND));
 
@@ -146,7 +140,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostDTO sharePost(PostShareDTORequest postRequest) {
+    public PostDTO sharePost(PostShareRequest postRequest) {
         Post origin = postRepository.findById(postRequest.getOriginPostId())
                 .orElseThrow(() -> new AppException("Không tìm thấy bài viết gốc", StatusCode.POST_NOT_FOUND));
         Account owner = accountRepository.findById(postRequest.getUserId())
@@ -185,7 +179,7 @@ public class PostServiceImpl implements PostService {
         for (int i = 0; i < mediaItems.length; i++) {
             MediaItemDTO item = mediaItems[i];
             if (item == null || item.getAttachmentId() == null) continue;
-            post.addMedia(attachmentsService.linkToPost(item.getAttachmentId(), post.getId(), i));
+            post.addMedia(mediaApi.linkToPost(item.getAttachmentId(), post.getId(), i));
         }
     }
 
@@ -201,14 +195,7 @@ public class PostServiceImpl implements PostService {
 
     @Transactional(readOnly = true)
     public List<PostResponse> getPostsByUser(String userId, String requesterId) {
-        Account owner = accountRepository.findById(userId).orElse(null);
-
-        boolean visible = owner == null
-                || Boolean.TRUE.equals(owner.getIsPublic())
-                || userId.equals(requesterId)
-                || followRepository.existsByFollowerIdAndFolloweeId(requesterId, userId);
-
-        if (!visible) return List.of();
+        if (!userApi.canView(userId, requesterId)) return List.of();
         return toPostResponses(postRepository.findByOwnerId(userId), requesterId);
     }
 
@@ -280,8 +267,7 @@ public class PostServiceImpl implements PostService {
     public PostResponse getPostById(String postId, String userId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException("Không tìm thấy thông tin bài viết", StatusCode.POST_NOT_FOUND));
-        Account owner = accountRepository.findById(post.getOwner().getId())
-                .orElseThrow(() -> new AppException("Không tìm thấy chủ bài viết", StatusCode.POST_NOT_FOUND));
+        ActorSnapshotDTO owner = userApi.getOwner(post.getOwner().getId());
         Integer commentCount = commentRepository.countByPostId(postId);
         return buildPostResponse(post, owner,
                 commentCount == null ? 0 : commentCount,
@@ -294,7 +280,7 @@ public class PostServiceImpl implements PostService {
     public List<PostResponse> getPostByFollowing(String userId) {
         Pageable pageable = PageRequest.of(0, 10);
 
-        List<String> followingIds = followRepository.findFolloweeIds(userId);
+        List<String> followingIds = userApi.findFolloweeIds(userId);
         if (followingIds.isEmpty()) {
             return List.of();
         }
@@ -320,23 +306,28 @@ public class PostServiceImpl implements PostService {
                 .map(p -> p.getOwner().getId())
                 .distinct().toList();
 
-        Map<String, Account> accountMap = accountRepository.findAllById(ownerIds).stream()
-                .collect(Collectors.toMap(Account::getId, Function.identity()));
+        Map<String, ActorSnapshotDTO> accountMap = userApi.getOwners(ownerIds).stream()
+                .collect(Collectors.toMap(ActorSnapshotDTO::getUserId, Function.identity()));
 
         Map<String, Integer> commentCountMap = commentRepository.countByPostIdIn(postIds).stream()
                 .collect(Collectors.toMap(CommentRepository.PostCommentCount::_id,
                         CommentRepository.PostCommentCount::count));
 
-        Map<String, Integer> likeCountMap = postLikeRepository.countByPostIdIn(postIds).stream()
-                .collect(Collectors.toMap(r -> (String) r[0], r -> ((Number) r[1]).intValue()));
-
-        Set<String> likedByRequester = new HashSet<>(
-                postLikeRepository.findLikedPostIds(requesterId, postIds));
+        // 1 truy vấn thay vì 2 (count + liked-by-requester) — cùng đọc bảng post_like.
+        Map<String, Integer> likeCountMap = new HashMap<>();
+        Set<String> likedByRequester = new HashSet<>();
+        for (Object[] row : postLikeRepository.countAndLikedByPostIdIn(requesterId, postIds)) {
+            String postId = (String) row[0];
+            likeCountMap.put(postId, ((Number) row[1]).intValue());
+            if (((Number) row[2]).longValue() > 0) {
+                likedByRequester.add(postId);
+            }
+        }
 
         return posts.stream()
                 .map(post -> {
                     String ownerId = post.getOwner().getId();
-                    Account owner = accountMap.get(ownerId);
+                    ActorSnapshotDTO owner = accountMap.get(ownerId);
                     if (owner == null) {
                         log.warn("Bỏ qua post {} vì không tìm thấy account {}", post.getId(), ownerId);
                         return null;
@@ -347,7 +338,7 @@ public class PostServiceImpl implements PostService {
                             likedByRequester.contains(post.getId()));
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -361,7 +352,9 @@ public class PostServiceImpl implements PostService {
             position = ScrollPosition.forward(Map.of("createdAt", createdAt, "id", lastItem));
         }
 
-//        Window<PostResponse> data = postRepository.findByCreatedBy();
+        Window<List<Post>> data = postRepository.findByOwnerId(userId, sort, position);
+
+
 
         return (ApiDataCursor<PostResponse>) List.of();
     }
