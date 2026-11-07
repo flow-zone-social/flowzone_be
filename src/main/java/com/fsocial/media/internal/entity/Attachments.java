@@ -1,0 +1,57 @@
+package com.fsocial.media.internal.entity;
+
+import com.fsocial.media.api.AttachmentType;
+import com.fsocial.user.internal.entity.Account;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
+import com.fsocial.post.internal.entity.Post;
+import com.fsocial.shared.persistence.AbstractEntity;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity
+@Table(name = "attachments")
+@SuperBuilder
+public class Attachments extends AbstractEntity<String> {
+
+    @Column(name = "public_id")
+    String publicId;
+
+    @Column(name = "resource_type", length = 64)
+    String resourceType;
+
+    @Column(name = "file_type", length = 64)
+    String fileType;
+
+    @Column(name = "size", length = 64)
+    String size;
+
+    @Column(name = "url", columnDefinition = "text")
+    String url;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    Account owner;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id")
+    Post post;
+
+    @Column(name = "ord")
+    Integer ord;
+
+    @Column(name = "width")
+    Integer width;
+
+    @Column(name = "height")
+    Integer height;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", length = 16)
+    AttachmentType type;
+}

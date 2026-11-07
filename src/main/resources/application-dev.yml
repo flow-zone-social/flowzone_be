@@ -51,6 +51,7 @@ spring:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -106,7 +107,7 @@ springdoc:
     doc-expansion: none
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
-  packages-to-scan: com.fsocial.controller
+  packages-to-scan: com.fsocial
 jwt:
   signerKey: ${JWT_SIGNER_KEY}
   duration: 3

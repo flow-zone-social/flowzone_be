@@ -1,21 +1,23 @@
 package com.fsocial;
 
-import com.fsocial.entity.Account;
-import com.fsocial.entity.Comment;
-import com.fsocial.entity.Post;
-import com.fsocial.entity.PostLike;
-import com.fsocial.entity.Attachments;
-import com.fsocial.enums.AttachmentType;
-import com.fsocial.repository.AccountRepository;
-import com.fsocial.repository.AttachmentsRepository;
-import com.fsocial.repository.CommentRepository;
-import com.fsocial.repository.PostLikeRepository;
-import com.fsocial.repository.PostRepository;
+import com.fsocial.user.internal.entity.Account;
+import com.fsocial.comment.internal.entity.Comment;
+import com.fsocial.post.internal.dto.PostFeedRow;
+import com.fsocial.post.internal.entity.Post;
+import com.fsocial.post.internal.entity.PostLike;
+import com.fsocial.media.internal.entity.Attachments;
+import com.fsocial.media.api.AttachmentType;
+import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.media.internal.repository.AttachmentsRepository;
+import com.fsocial.comment.internal.repository.CommentRepository;
+import com.fsocial.post.internal.repository.PostLikeRepository;
+import com.fsocial.post.internal.repository.PostRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -99,16 +101,15 @@ class MigrationSanityTest {
         postLikeRepository.saveAndFlush(new PostLike(post.getId(), owner.getId()));
 
         Comment root = commentRepository.saveAndFlush(
-                Comment.builder().postId(post.getId()).userId(owner.getId()).text("root").build());
+                Comment.builder().post(post).userId(owner.getId()).text("root").build());
 
         postRepository.delete(post);
         postRepository.flush();
 
         assertThat(mediaCount(post.getId())).isZero();
         assertThat(postLikeRepository.existsById(new PostLike.Key(post.getId(), owner.getId()))).isFalse();
-        // comment.post_id has no FK to post (plain string column) so it survives — only
-        // the CommentConsumer (RabbitMQ) deletes it out-of-band. Assert it's still there.
-        assertThat(commentRepository.findById(root.getId())).isPresent();
+        // comment.post_id has a real FK with ON DELETE CASCADE now, so it's deleted with the post.
+        assertThat(commentRepository.findById(root.getId())).isEmpty();
     }
 
     @Test
@@ -117,17 +118,54 @@ class MigrationSanityTest {
         Post post = postRepository.save(Post.builder().owner(owner).text("hello").build());
 
         Comment root = commentRepository.saveAndFlush(
-                Comment.builder().postId(post.getId()).userId(owner.getId()).text("root").build());
+                Comment.builder().post(post).userId(owner.getId()).text("root").build());
         commentRepository.saveAndFlush(
-                Comment.builder().postId(post.getId()).userId(owner.getId()).parent(root).text("reply1").build());
+                Comment.builder().post(post).userId(owner.getId()).parent(root).text("reply1").build());
         commentRepository.saveAndFlush(
-                Comment.builder().postId(post.getId()).userId(owner.getId()).parent(root).text("reply2").build());
+                Comment.builder().post(post).userId(owner.getId()).parent(root).text("reply2").build());
 
         List<Comment> roots = commentRepository.findByPostId(post.getId());
 
         assertThat(roots).hasSize(1);
         assertThat(roots.get(0).getId()).isEqualTo(root.getId());
         assertThat(commentRepository.findByParentId(root.getId())).hasSize(2);
+    }
+
+    /**
+     * Thực thi thật findPostsByOwner/findPostsByIds (không chỉ parse ở context-load) — đây đúng là chỗ
+     * ConverterNotFoundException (Tuple -> PostFeedRow) xảy ra khi thiếu "select new PostFeedRow(...)".
+     */
+    @Test
+    void findPostsByOwnerAndByIds_returnEnrichedRows() {
+        Account owner = accountRepository.save(Account.builder()
+                .username("sanity_" + System.nanoTime()).displayName("Owner Sanity").avatar("http://a/avatar.png")
+                .build());
+        Account requester = accountRepository.save(Account.builder()
+                .username("sanity_" + System.nanoTime()).build());
+
+        Post post = postRepository.save(Post.builder().owner(owner).text("hello").html("<p>hello</p>").build());
+        postRepository.saveAndFlush(post);
+        commentRepository.saveAndFlush(Comment.builder().post(post).userId(requester.getId()).text("nice").build());
+        postLikeRepository.saveAndFlush(new PostLike(post.getId(), requester.getId()));
+
+        List<PostFeedRow> byOwner = postRepository.findPostsByOwner(owner.getId(), requester.getId(), PageRequest.of(0, 10));
+        assertThat(byOwner).hasSize(1);
+        PostFeedRow ownerRow = byOwner.get(0);
+        assertThat(ownerRow.post().getId()).isEqualTo(post.getId());
+        assertThat(ownerRow.displayName()).isEqualTo("Owner Sanity");
+        assertThat(ownerRow.avatar()).isEqualTo("http://a/avatar.png");
+        assertThat(ownerRow.commentCount()).isEqualTo(1L);
+        assertThat(ownerRow.likeCount()).isEqualTo(1L);
+        assertThat(ownerRow.isLikedByRequester()).isTrue();
+
+        List<PostFeedRow> byIds = postRepository.findPostsByIds(List.of(post.getId()), requester.getId());
+        assertThat(byIds).hasSize(1);
+        assertThat(byIds.get(0).post().getId()).isEqualTo(post.getId());
+        assertThat(byIds.get(0).isLikedByRequester()).isTrue();
+
+        // requester khác (chưa like) phải ra isLikedByRequester = false
+        List<PostFeedRow> byIdsOtherViewer = postRepository.findPostsByIds(List.of(post.getId()), owner.getId());
+        assertThat(byIdsOtherViewer.get(0).isLikedByRequester()).isFalse();
     }
 
     private long mediaCount(String postId) {
