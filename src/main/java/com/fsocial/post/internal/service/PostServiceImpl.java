@@ -17,6 +17,9 @@ import com.fsocial.post.internal.feed.publisher.InteractionEventPublisher;
 import com.fsocial.notification.api.NotificationEvent;
 
 import com.fsocial.media.api.MediaApi;
+import com.fsocial.media.internal.entity.Attachments;
+import com.fsocial.media.internal.repository.AttachmentsRepository;
+import com.fsocial.post.internal.dto.PostFeedRow;
 import com.fsocial.post.internal.feed.service.FeedService;
 import com.fsocial.post.internal.service.PostService;
 import com.fsocial.shared.redis.RedisService;
@@ -35,6 +38,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.fsocial.post.internal.util.PostUtils.buildPostResponse;
+import com.fsocial.post.internal.util.PostUtils;
 import com.fsocial.comment.internal.repository.CommentRepository;
 import com.fsocial.media.api.MediaItemDTO;
 import com.fsocial.post.internal.repository.PostLikeRepository;
@@ -52,6 +56,7 @@ public class PostServiceImpl implements PostService {
     PostLikeRepository postLikeRepository;
     AccountRepository accountRepository;
     CommentRepository commentRepository;
+    AttachmentsRepository attachmentsRepository;
     UserApi userApi;
     MediaApi mediaApi;
     PostMapper postMapper;
@@ -193,10 +198,27 @@ public class PostServiceImpl implements PostService {
                 .toList();
     }
 
+    @Override
     @Transactional(readOnly = true)
-    public List<PostResponse> getPostsByUser(String userId, String requesterId) {
+    public List<PostResponse> getPostsByUser(String userId, String requesterId, int size) {
+        return getPostsByUser(userId, requesterId, PageRequest.of(0, Math.min(50, size)));
+    }
+
+    /** owner/like/comment gộp vào 1 truy vấn (findPostsByOwner), media fetch riêng theo postIds — 2 query thay vì 4. */
+    @Transactional(readOnly = true)
+    public List<PostResponse> getPostsByUser(String userId, String requesterId, Pageable pageable) {
         if (!userApi.canView(userId, requesterId)) return List.of();
-        return toPostResponses(postRepository.findByOwnerId(userId), requesterId);
+
+        List<PostFeedRow> rows = postRepository.findPostsByOwner(userId, requesterId, pageable);
+        if (rows.isEmpty()) return List.of();
+
+        List<String> postIds = rows.stream().map(r -> r.post().getId()).toList();
+        Map<String, List<Attachments>> mediaByPostId = attachmentsRepository.findByPostIdInOrderByOrd(postIds).stream()
+                .collect(Collectors.groupingBy(a -> a.getPost().getId()));
+
+        return rows.stream()
+                .map(row -> PostUtils.buildPostResponseFromFeedRow(row, mediaByPostId.getOrDefault(row.post().getId(), List.of())))
+                .toList();
     }
 
     @Override

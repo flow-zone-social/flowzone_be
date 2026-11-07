@@ -1,5 +1,6 @@
 package com.fsocial.comment.internal.entity;
 
+import com.fsocial.user.internal.entity.Account;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,22 +20,18 @@ import java.time.LocalDateTime;
 public class CommentLike {
 
     @Id
-    @Column(name = "comment_id", length = 36)
-    String commentId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "comment_id", nullable = false)
+    Comment comment;
 
     @Id
-    @Column(name = "user_id", length = 36)
-    String userId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    Account user;
 
     @Column(name = "created_at", nullable = false)
     @Builder.Default
     LocalDateTime createdAt = LocalDateTime.now();
-
-    public CommentLike(String commentId, String userId) {
-        this.commentId = commentId;
-        this.userId = userId;
-        this.createdAt = LocalDateTime.now();
-    }
 
     @Getter
     @Setter
@@ -42,7 +39,8 @@ public class CommentLike {
     @AllArgsConstructor
     @EqualsAndHashCode
     public static class Key implements Serializable {
-        private String commentId;
-        private String userId;
+        // Tên field phải trùng với @Id ở entity; kiểu là kiểu PK của Comment/Account.
+        private String comment;
+        private String user;
     }
 }

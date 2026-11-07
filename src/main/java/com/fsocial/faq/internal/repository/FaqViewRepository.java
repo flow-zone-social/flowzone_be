@@ -12,10 +12,10 @@ public interface FaqViewRepository extends JpaRepository<FaqView, String> {
 
     long countByFaqId(String faqId);
 
-    @Query("select count(distinct v.userId) from FaqView v where v.faqId = :faqId")
+    @Query("select count(distinct v.user.id) from FaqView v where v.faq.id = :faqId")
     long countDistinctUserIdByFaqId(@Param("faqId") String faqId);
 
     @Modifying
-    @Query("delete from FaqView v where v.faqId = :faqId")
+    @Query("delete from FaqView v where v.faq.id = :faqId")
     int deleteByFaqId(@Param("faqId") String faqId);
 }

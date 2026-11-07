@@ -8,6 +8,8 @@ import lombok.experimental.SuperBuilder;
 import com.fsocial.media.internal.entity.Attachments;
 import com.fsocial.shared.persistence.AbstractEntity;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -34,4 +36,7 @@ public class Faq extends AbstractEntity<String> {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attachment_id")
     Attachments attachment;
+
+    @OneToMany(mappedBy = "faq")
+    List<FaqView> faqViews;
 }

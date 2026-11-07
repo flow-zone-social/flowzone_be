@@ -2,6 +2,7 @@ package com.fsocial;
 
 import com.fsocial.user.internal.entity.Account;
 import com.fsocial.comment.internal.entity.Comment;
+import com.fsocial.post.internal.dto.PostFeedRow;
 import com.fsocial.post.internal.entity.Post;
 import com.fsocial.post.internal.entity.PostLike;
 import com.fsocial.media.internal.entity.Attachments;
@@ -16,6 +17,7 @@ import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -127,6 +129,43 @@ class MigrationSanityTest {
         assertThat(roots).hasSize(1);
         assertThat(roots.get(0).getId()).isEqualTo(root.getId());
         assertThat(commentRepository.findByParentId(root.getId())).hasSize(2);
+    }
+
+    /**
+     * Thực thi thật findPostsByOwner/findPostsByIds (không chỉ parse ở context-load) — đây đúng là chỗ
+     * ConverterNotFoundException (Tuple -> PostFeedRow) xảy ra khi thiếu "select new PostFeedRow(...)".
+     */
+    @Test
+    void findPostsByOwnerAndByIds_returnEnrichedRows() {
+        Account owner = accountRepository.save(Account.builder()
+                .username("sanity_" + System.nanoTime()).displayName("Owner Sanity").avatar("http://a/avatar.png")
+                .build());
+        Account requester = accountRepository.save(Account.builder()
+                .username("sanity_" + System.nanoTime()).build());
+
+        Post post = postRepository.save(Post.builder().owner(owner).text("hello").html("<p>hello</p>").build());
+        postRepository.saveAndFlush(post);
+        commentRepository.saveAndFlush(Comment.builder().post(post).userId(requester.getId()).text("nice").build());
+        postLikeRepository.saveAndFlush(new PostLike(post.getId(), requester.getId()));
+
+        List<PostFeedRow> byOwner = postRepository.findPostsByOwner(owner.getId(), requester.getId(), PageRequest.of(0, 10));
+        assertThat(byOwner).hasSize(1);
+        PostFeedRow ownerRow = byOwner.get(0);
+        assertThat(ownerRow.post().getId()).isEqualTo(post.getId());
+        assertThat(ownerRow.displayName()).isEqualTo("Owner Sanity");
+        assertThat(ownerRow.avatar()).isEqualTo("http://a/avatar.png");
+        assertThat(ownerRow.commentCount()).isEqualTo(1L);
+        assertThat(ownerRow.likeCount()).isEqualTo(1L);
+        assertThat(ownerRow.isLikedByRequester()).isTrue();
+
+        List<PostFeedRow> byIds = postRepository.findPostsByIds(List.of(post.getId()), requester.getId());
+        assertThat(byIds).hasSize(1);
+        assertThat(byIds.get(0).post().getId()).isEqualTo(post.getId());
+        assertThat(byIds.get(0).isLikedByRequester()).isTrue();
+
+        // requester khác (chưa like) phải ra isLikedByRequester = false
+        List<PostFeedRow> byIdsOtherViewer = postRepository.findPostsByIds(List.of(post.getId()), owner.getId());
+        assertThat(byIdsOtherViewer.get(0).isLikedByRequester()).isFalse();
     }
 
     private long mediaCount(String postId) {

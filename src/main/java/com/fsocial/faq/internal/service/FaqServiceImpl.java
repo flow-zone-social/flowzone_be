@@ -19,6 +19,7 @@ import com.fsocial.faq.internal.repository.FaqRatingRepository;
 import com.fsocial.faq.internal.repository.FaqRepository;
 import com.fsocial.faq.internal.repository.FaqViewRepository;
 import com.fsocial.faq.internal.service.FaqService;
+import com.fsocial.user.internal.repository.AccountRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -35,6 +36,7 @@ public class FaqServiceImpl implements FaqService, FaqApi {
 
     FaqRepository faqRepository;
     FaqViewRepository faqViewRepository;
+    AccountRepository accountRepository;
     FaqRatingRepository faqRatingRepository;
     MediaApi mediaApi;
     FaqMapper faqMapper;
@@ -69,7 +71,10 @@ public class FaqServiceImpl implements FaqService, FaqApi {
     @Override
     public FaqDTO getFaqById(String faqId, String userId) {
         Faq faq = findFaqOrThrow(faqId);
-        faqViewRepository.save(FaqView.builder().faqId(faqId).userId(userId).build());
+        faqViewRepository.save(FaqView.builder()
+                .faq(faq)
+                .user(userId == null ? null : accountRepository.getReferenceById(userId))
+                .build());
         return enrich(faq);
     }
 

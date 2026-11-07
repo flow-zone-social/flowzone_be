@@ -2,6 +2,7 @@ package com.fsocial.post.internal.util;
 
 import com.fsocial.post.internal.dto.ContentResponse;
 import com.fsocial.post.internal.dto.MediaResponse;
+import com.fsocial.post.internal.dto.PostFeedRow;
 import com.fsocial.post.internal.dto.PostResponse;
 import com.fsocial.user.api.ActorSnapshotDTO;
 import com.fsocial.media.internal.entity.Attachments;
@@ -35,6 +36,30 @@ public class PostUtils {
                 .avatar(owner == null ? null : owner.getAvatar())
                 .createDatetime(post.getCreateDatetime())
                 .isLike(liked)
+                .isShare(Boolean.TRUE.equals(post.getIsShare()))
+                .status(Boolean.TRUE.equals(post.getStatus()))
+                .tags(post.getTags() == null ? List.of() : post.getTags())
+                .build();
+    }
+
+    /** Dùng cho getPostsByUser: media được truyền vào riêng (đã fetch gộp theo postIds), không đọc post.getMedia(). */
+    public static PostResponse buildPostResponseFromFeedRow(PostFeedRow row, List<Attachments> media) {
+        Post post = row.post();
+        return PostResponse.builder()
+                .id(post.getId())
+                .userId(post.getOwner().getId())
+                .originPostId(post.getOriginPostId())
+                .content(ContentResponse.builder()
+                        .text(post.getText())
+                        .html(post.getHtml())
+                        .media(buildMediaResponse(media))
+                        .build())
+                .countLikes(row.likeCount() == null ? 0 : row.likeCount().intValue())
+                .countComments(row.commentCount() == null ? 0 : row.commentCount().intValue())
+                .displayName(row.displayName() == null ? "" : row.displayName())
+                .avatar(row.avatar())
+                .createDatetime(post.getCreateDatetime())
+                .isLike(row.isLikedByRequester())
                 .isShare(Boolean.TRUE.equals(post.getIsShare()))
                 .status(Boolean.TRUE.equals(post.getStatus()))
                 .tags(post.getTags() == null ? List.of() : post.getTags())

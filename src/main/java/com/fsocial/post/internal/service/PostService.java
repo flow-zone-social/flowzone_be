@@ -19,6 +19,9 @@ public interface PostService {
     // Methods from timelineService
     List<PostResponse> getPostsByUserId(String userId, int feedSize);
 
+    /** Bài viết của chính userId (ownerId == requesterId khi tự xem), 1 query gộp + 1 query media. */
+    List<PostResponse> getPostsByUser(String userId, String requesterId, int size);
+
 //    com.fsocial.postservice.dto.profile.ProfileResponse getProfile(String id);
 
     SearchPageResponse<PostResponse> findByText(String text, String userId, int page, int size);

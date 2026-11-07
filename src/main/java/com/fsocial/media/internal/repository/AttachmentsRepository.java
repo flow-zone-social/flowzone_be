@@ -21,8 +21,10 @@ public interface AttachmentsRepository extends JpaRepository<Attachments, String
     List<AttachmentDTO> findByFileType(String fileType, Pageable pageable);
 
     @Modifying
-    @Query("delete from Attachments a where a.ownerId = :postId")
+    @Query("delete from Attachments a where a.owner.id = :postId")
     int deleteByOwnerId(@Param("postId") String postId);
 
     Window<AttachementProfileDTO> findByOwnerIdAndResourceType(String userId, String resourceType, Sort sort, ScrollPosition position);
+
+    List<Attachments> findByPostIdInOrderByOrd(List<String> postIds);
 }

@@ -1,11 +1,14 @@
 package com.fsocial.user.internal.entity;
 
+import com.fsocial.media.internal.entity.Attachments;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
+import java.util.List;
+
 import com.fsocial.shared.persistence.AbstractEntity;
 import com.fsocial.user.internal.rbac.Role;
 
@@ -69,4 +72,7 @@ public class    Account extends AbstractEntity<String> {
     @Column(name = "is_public", nullable = false)
     @Builder.Default
     Boolean isPublic = true;
+
+    @OneToMany(mappedBy = "owner")
+    List<Attachments> attachments;
 }

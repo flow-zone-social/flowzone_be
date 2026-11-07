@@ -19,17 +19,17 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
 
     List<ConversationMember> findByConversationId(String conversationId);
 
-    @Query("select m.conversation.id from ConversationMember m where m.userId = :userId")
+    @Query("select m.conversation.id from ConversationMember m where m.user.id = :userId")
     List<String> findConversationIdsByUserId(@Param("userId") String userId);
 
-    @Query("select m.userId from ConversationMember m where m.conversation.id = :conversationId")
+    @Query("select m.user.id from ConversationMember m where m.conversation.id = :conversationId")
     List<String> findUserIdsByConversationId(@Param("conversationId") String conversationId);
 
     @Query("""
             select m.conversation.id from ConversationMember m
-            where m.userId in :userIds
+            where m.user.id in :userIds
             group by m.conversation.id
-            having count(distinct m.userId) = :memberCount
+            having count(distinct m.user.id) = :memberCount
             """)
     List<String> findConversationIdsByExactMembers(
             @Param("userIds") List<String> userIds, @Param("memberCount") long memberCount);
@@ -37,7 +37,7 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
     @Query("""
             SELECT new com.fsocial.chat.internal.dto.ConversationMemberDTO(
                 c.id, c.type, c.name, c.avatarUrl,
-                mem.userId, ac.displayName, ac.avatar,
+                mem.user.id, ac.displayName, ac.avatar,
                 null,
                 (SELECT COUNT(m2) FROM Message m2
                     WHERE m2.conversation = c
@@ -48,10 +48,10 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
             FROM ConversationMember cm
             JOIN cm.conversation c
             JOIN ConversationMember mem ON mem.conversation = c AND mem.leftAt IS NULL
-            JOIN Account ac ON ac.id = mem.userId
+            JOIN Account ac ON ac.id = mem.user.id
             LEFT JOIN Message lm ON lm.conversation = c
                 AND lm.createdAt = (SELECT MAX(m3.createdAt) FROM Message m3 WHERE m3.conversation = c)
-            WHERE cm.userId = :senderId
+            WHERE cm.user.id = :senderId
               AND cm.leftAt IS NULL
             ORDER BY lm.createdAt DESC NULLS LAST
             """)

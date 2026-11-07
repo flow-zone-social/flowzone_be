@@ -1,5 +1,6 @@
 package com.fsocial.faq.internal.entity;
 
+import com.fsocial.user.internal.entity.Account;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -27,11 +28,13 @@ public class FaqView {
     @Column(length = 36)
     String id;
 
-    @Column(name = "faq_id", length = 36, nullable = false)
-    String faqId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "faq_id", nullable = false)
+    Faq faq;
 
-    @Column(name = "user_id", length = 36)
-    String userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    Account user;
 
     @Column(name = "viewed_at", nullable = false)
     @Builder.Default

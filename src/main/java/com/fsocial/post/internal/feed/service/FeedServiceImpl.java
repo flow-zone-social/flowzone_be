@@ -1,5 +1,6 @@
 package com.fsocial.post.internal.feed.service;
 
+import com.fsocial.post.internal.dto.PostFeedRow;
 import com.fsocial.post.internal.dto.PostOriginResponse;
 import com.fsocial.post.internal.dto.PostResponse;
 import com.fsocial.user.api.ActorSnapshotDTO;
@@ -9,6 +10,7 @@ import com.fsocial.post.internal.entity.Post;
 import com.fsocial.post.internal.feed.service.FeedService;
 import com.fsocial.post.internal.feed.service.InterestGraphService;
 import com.fsocial.post.internal.feed.service.ScoringService;
+import com.fsocial.post.internal.util.PostUtils;
 import com.fsocial.user.api.UserApi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +27,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.fsocial.post.internal.util.PostUtils.buildContentResponse;
-import static com.fsocial.post.internal.util.PostUtils.buildPostResponse;
-import com.fsocial.comment.internal.repository.CommentRepository;
+import com.fsocial.media.internal.entity.Attachments;
+import com.fsocial.media.internal.repository.AttachmentsRepository;
 import com.fsocial.post.internal.feed.repository.SeenPostRepository;
-import com.fsocial.post.internal.repository.PostLikeRepository;
 import com.fsocial.post.internal.repository.PostRepository;
 
 @Service
@@ -50,10 +51,9 @@ public class FeedServiceImpl implements FeedService {
             """;
 
     private final PostRepository postRepository;
-    private final PostLikeRepository postLikeRepository;
+    private final AttachmentsRepository attachmentsRepository;
     private final SeenPostRepository seenPostRepository;
     private final UserApi userApi;
-    private final CommentRepository commentRepository;
     private final InterestGraphService interestGraphService;
     private final ScoringService scoringService;
     private final JdbcTemplate jdbcTemplate;
@@ -83,8 +83,16 @@ public class FeedServiceImpl implements FeedService {
         // Enrich with social context and sort by final_score (score computed once per post)
         Set<String> followingIds = new HashSet<>(userApi.findFolloweeIds(userId));
         List<String> postIds = candidates.stream().map(Post::getId).toList();
-        Map<String, Integer> commentCountMap = buildCommentCountMap(postIds);
-        Map<String, Integer> likeCountMap = buildLikeCountMap(postIds);
+
+        // 1 truy vấn: owner + like/comment count + isLiked cho cả candidate pool — dùng cho cả scoring và hiển thị.
+        Map<String, PostFeedRow> feedRowByPostId = postRepository.findPostsByIds(postIds, userId).stream()
+                .collect(Collectors.toMap(r -> r.post().getId(), Function.identity()));
+        Map<String, Integer> commentCountMap = feedRowByPostId.values().stream()
+                .collect(Collectors.toMap(r -> r.post().getId(),
+                        r -> r.commentCount() == null ? 0 : r.commentCount().intValue()));
+        Map<String, Integer> likeCountMap = feedRowByPostId.values().stream()
+                .collect(Collectors.toMap(r -> r.post().getId(),
+                        r -> r.likeCount() == null ? 0 : r.likeCount().intValue()));
         Map<String, List<String>> tagMap = candidates.stream()
                 .collect(Collectors.toMap(Post::getId, Post::getTags));
 
@@ -104,7 +112,7 @@ public class FeedServiceImpl implements FeedService {
         // Mark posts as seen
         markSeenBatch(userId, candidates.stream().map(Post::getId).toList());
 
-        return toPostResponses(candidates, userId, commentCountMap, likeCountMap);
+        return toPostResponses(candidates, feedRowByPostId);
     }
 
     /** JPQL {@code not in ()} rỗng là cú pháp lỗi — luôn có ít nhất 1 phần tử không tồn tại. */
@@ -255,44 +263,24 @@ public class FeedServiceImpl implements FeedService {
         return seenPostRepository.findPostIdsByUserId(userId);
     }
 
-    private Map<String, Integer> buildCommentCountMap(List<String> postIds) {
-        if (postIds.isEmpty()) return Collections.emptyMap();
-        return commentRepository.countByPostIdIn(postIds).stream()
-                .collect(Collectors.toMap(
-                        CommentRepository.PostCommentCount::_id,
-                        CommentRepository.PostCommentCount::count));
-    }
-
-    private Map<String, Integer> buildLikeCountMap(List<String> postIds) {
-        if (postIds.isEmpty()) return Collections.emptyMap();
-        return postLikeRepository.countByPostIdIn(postIds).stream()
-                .collect(Collectors.toMap(r -> (String) r[0], r -> ((Number) r[1]).intValue()));
-    }
-
-    private List<PostResponse> toPostResponses(List<Post> posts, String requesterId,
-                                               Map<String, Integer> commentCountMap,
-                                               Map<String, Integer> likeCountMap) {
+    /** owner/like/comment/isLiked đều lấy sẵn từ feedRowByPostId (1 truy vấn ở buildPersonalizedFeed); media fetch riêng theo postIds. */
+    private List<PostResponse> toPostResponses(List<Post> posts, Map<String, PostFeedRow> feedRowByPostId) {
         if (posts.isEmpty()) return List.of();
 
-        List<String> ownerIds = posts.stream().map(p -> p.getOwner().getId()).distinct().toList();
-        Map<String, ActorSnapshotDTO> accountMap = userApi.getOwners(ownerIds).stream()
-                .collect(Collectors.toMap(ActorSnapshotDTO::getUserId, Function.identity()));
-
-        Set<String> likedByRequester = new HashSet<>(
-                postLikeRepository.findLikedPostIds(requesterId, posts.stream().map(Post::getId).toList()));
+        List<String> postIds = posts.stream().map(Post::getId).toList();
+        Map<String, List<Attachments>> mediaByPostId = attachmentsRepository.findByPostIdInOrderByOrd(postIds).stream()
+                .collect(Collectors.groupingBy(a -> a.getPost().getId()));
         Map<String, PostOriginResponse> originResponseMap = buildOriginResponseMap(posts);
 
         return posts.stream()
                 .map(post -> {
-                    ActorSnapshotDTO owner = accountMap.get(post.getOwner().getId());
-                    if (owner == null) {
+                    PostFeedRow row = feedRowByPostId.get(post.getId());
+                    if (row == null) {
                         log.warn("Owner not found for post {}", post.getId());
                         return null;
                     }
-                    PostResponse response = buildPostResponse(post, owner,
-                            commentCountMap.getOrDefault(post.getId(), 0),
-                            likeCountMap.getOrDefault(post.getId(), 0),
-                            likedByRequester.contains(post.getId()));
+                    PostResponse response = PostUtils.buildPostResponseFromFeedRow(row,
+                            mediaByPostId.getOrDefault(post.getId(), List.of()));
                     if (post.getOriginPostId() != null) {
                         response.setPostOriginResponse(originResponseMap.get(post.getOriginPostId()));
                     }

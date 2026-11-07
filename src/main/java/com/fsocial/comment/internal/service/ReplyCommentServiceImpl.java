@@ -15,6 +15,7 @@ import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.comment.internal.repository.CommentLikeRepository;
 import com.fsocial.comment.internal.repository.CommentRepository;
+import com.fsocial.user.internal.repository.AccountRepository;
 import com.fsocial.comment.internal.service.ReplyCommentService;
 import com.fsocial.media.api.MediaApi;
 import lombok.AccessLevel;
@@ -46,6 +47,7 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
     UserApi userApi;
     CommentRepository commentRepository;
     CommentLikeRepository commentLikeRepository;
+    AccountRepository accountRepository;
 
     @Override
     @Transactional
@@ -151,7 +153,10 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
 
         if (!commentLikeRepository.existsByCommentIdAndUserId(replyId, request.getUserId())) {
             // PK (comment_id, user_id) đảm bảo idempotent
-            commentLikeRepository.save(new CommentLike(replyId, request.getUserId()));
+            commentLikeRepository.save(CommentLike.builder()
+                    .comment(commentRepository.getReferenceById(replyId))
+                    .user(accountRepository.getReferenceById(request.getUserId()))
+                    .build());
             return true;
         }
         commentLikeRepository.deleteByCommentIdAndUserId(replyId, request.getUserId());

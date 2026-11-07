@@ -17,18 +17,18 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Commen
     boolean existsByCommentIdAndUserId(String commentId, String userId);
 
     @Modifying
-    @Query("delete from CommentLike l where l.commentId = :commentId and l.userId = :userId")
+    @Query("delete from CommentLike l where l.comment.id = :commentId and l.user.id = :userId")
     int deleteByCommentIdAndUserId(@Param("commentId") String commentId, @Param("userId") String userId);
 
-    @Query("select l.userId from CommentLike l where l.commentId = :commentId")
+    @Query("select l.user.id from CommentLike l where l.comment.id = :commentId")
     List<String> findUserIdsByCommentId(@Param("commentId") String commentId);
 
     /** Đếm like cho nhiều comment trong 1 truy vấn: [commentId, count]. */
-    @Query("select l.commentId, count(l) from CommentLike l where l.commentId in :commentIds group by l.commentId")
+    @Query("select l.comment.id, count(l) from CommentLike l where l.comment.id in :commentIds group by l.comment.id")
     List<Object[]> countByCommentIdIn(@Param("commentIds") List<String> commentIds);
 
     /** Cờ isLike cho cả danh sách comment trong 1 truy vấn thay vì N lần existsBy. */
-    @Query("select l.commentId from CommentLike l where l.userId = :userId and l.commentId in :commentIds")
+    @Query("select l.comment.id from CommentLike l where l.user.id = :userId and l.comment.id in :commentIds")
     List<String> findLikedCommentIds(@Param("userId") String userId,
                                      @Param("commentIds") List<String> commentIds);
 }

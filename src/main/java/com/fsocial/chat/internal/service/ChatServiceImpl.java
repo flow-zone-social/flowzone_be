@@ -140,7 +140,7 @@ public class ChatServiceImpl implements ChatService {
         for (String memberId : allMemberIds) {
             conversationMemberRepository.save(ConversationMember.builder()
                     .conversation(conversation)
-                    .userId(memberId)
+                    .user(accountRepository.getReferenceById(memberId))
                     .role(memberId.equals(userId) ? com.fsocial.chat.internal.enums.MemberRole.OWNER : com.fsocial.chat.internal.enums.MemberRole.MEMBER)
                     .build());
         }

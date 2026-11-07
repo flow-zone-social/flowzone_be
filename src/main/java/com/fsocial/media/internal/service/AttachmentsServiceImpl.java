@@ -45,7 +45,7 @@ public class AttachmentsServiceImpl implements AttachmentsService {
                 .resourceType(dto.getResourceType())
                 .fileType(dto.getFileType())
                 .size(dto.getSize())
-                .ownerId(dto.getOwnerId())
+                .owner(dto.getOwnerId() == null ? null : accountRepository.getReferenceById(dto.getOwnerId()))
                 .publicId(dto.getPublicId())
                 .width(dto.getWidth())
                 .height(dto.getHeight())

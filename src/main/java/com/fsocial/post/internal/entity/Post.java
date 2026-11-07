@@ -1,15 +1,19 @@
 package com.fsocial.post.internal.entity;
 
+import com.fsocial.comment.internal.entity.Comment;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
 import com.fsocial.media.internal.entity.Attachments;
 import com.fsocial.shared.persistence.AbstractEntity;
 import com.fsocial.user.internal.entity.Account;
@@ -73,6 +77,12 @@ public class Post extends AbstractEntity<String> {
     @Column(name = "tags", columnDefinition = "text[]")
     @Builder.Default
     List<String> tags = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    @OrderBy("createDatetime ASC")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @Builder.Default
+    List<Comment> comments = new ArrayList<>();
 
     public void addMedia(Attachments item) {
         item.setPost(this);

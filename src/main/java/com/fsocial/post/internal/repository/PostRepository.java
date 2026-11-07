@@ -1,6 +1,6 @@
 package com.fsocial.post.internal.repository;
 
-import com.fsocial.post.internal.dto.PostResponse;
+import com.fsocial.post.internal.dto.PostFeedRow;
 import com.fsocial.post.internal.dto.PostStatisticsDTO;
 import com.fsocial.post.internal.dto.PostStatisticsLongDateDTO;
 import com.fsocial.post.internal.entity.Post;
@@ -165,6 +165,45 @@ public interface PostRepository extends JpaRepository<Post, String> {
 
     Window<List<Post>> findByOwnerId(String ownerId, Sort sort, ScrollPosition position);
 
-    @Query("select p from Post p")
-    List<PostResponse> findPost(String userId, Pageable pageable);
+    // ---- Posts by owner, enriched (profile/timeline) ----
+
+    /**
+     * owner/like/comment đều gộp vào 1 truy vấn qua subquery; media lấy riêng theo postIds (xem getPostsByUser).
+     * Phải viết "select new PostFeedRow(...)" rõ ràng: cơ chế rewrite tự động của Spring Data (bỏ "new") chỉ áp dụng
+     * khi select toàn bộ entity HOẶC chỉ các property đơn giản — không hoạt động khi trộn entity (p) với subquery
+     * scalar như ở đây. Thiếu "new", Hibernate trả về Tuple thô và Spring không tìm được converter sang record
+     * (ConverterNotFoundException: TupleBackedMap -> PostFeedRow) khi thực thi với dữ liệu thật.
+     */
+    @Query("""
+            select new com.fsocial.post.internal.dto.PostFeedRow(
+                p, a.displayName, a.avatar,
+                (select count(pl) from PostLike pl where pl.postId = p.id),
+                (select count(c) from Comment c where c.post.id = p.id and c.parent is null),
+                (select count(pl2) from PostLike pl2 where pl2.postId = p.id and pl2.userId = :requesterId)
+            )
+            from Post p
+            join p.owner a
+            where a.id = :ownerId
+            order by p.createDatetime desc
+            """)
+    List<PostFeedRow> findPostsByOwner(@Param("ownerId") String ownerId,
+                                       @Param("requesterId") String requesterId,
+                                       Pageable pageable);
+
+    // ---- Posts by id set, enriched (feed candidate enrichment) ----
+
+    /** Giống findPostsByOwner nhưng lọc theo danh sách id (candidate pool của feed cá nhân hóa, nhiều owner khác nhau). */
+    @Query("""
+            select new com.fsocial.post.internal.dto.PostFeedRow(
+                p, a.displayName, a.avatar,
+                (select count(pl) from PostLike pl where pl.postId = p.id),
+                (select count(c) from Comment c where c.post.id = p.id and c.parent is null),
+                (select count(pl2) from PostLike pl2 where pl2.postId = p.id and pl2.userId = :requesterId)
+            )
+            from Post p
+            join p.owner a
+            where p.id in :postIds
+            """)
+    List<PostFeedRow> findPostsByIds(@Param("postIds") List<String> postIds,
+                                     @Param("requesterId") String requesterId);
 }
