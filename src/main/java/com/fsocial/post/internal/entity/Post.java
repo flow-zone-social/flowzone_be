@@ -16,7 +16,7 @@ import java.util.List;
 
 import com.fsocial.media.internal.entity.Attachments;
 import com.fsocial.shared.persistence.AbstractEntity;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 
 @Getter
 @Setter
@@ -30,7 +30,7 @@ public class Post extends AbstractEntity<String> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
-    Account owner;
+    User owner;
 
     @Column(name = "text", columnDefinition = "text")
     String text;

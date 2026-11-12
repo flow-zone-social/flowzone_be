@@ -3,7 +3,7 @@ package com.fsocial.user.internal.service;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.user.internal.entity.Follow;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 import com.fsocial.user.internal.repository.FollowRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import java.util.Set;
 public class FollowServiceImpl implements FollowService {
 
     FollowRepository followRepository;
-    AccountRepository accountRepository;
+    UserRepository userRepository;
 
     @Override
     @Transactional
@@ -45,22 +45,22 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public Set<String> getFollowers(String userId) {
-        if (!accountRepository.existsById(userId))
+        if (!userRepository.existsById(userId))
             throw new AppException(StatusCode.USER_NOT_FOUND);
         return new HashSet<>(followRepository.findFollowerIds(userId));
     }
 
     @Override
     public Set<String> getFollowing(String userId) {
-        if (!accountRepository.existsById(userId))
+        if (!userRepository.existsById(userId))
             throw new AppException(StatusCode.USER_NOT_FOUND);
         return new HashSet<>(followRepository.findFolloweeIds(userId));
     }
 
     @Override
     public boolean checkFollow(String follower, String followee) {
-        accountRepository.findById(follower).orElseThrow(() -> new AppException(StatusCode.NOT_FOUND));
-        accountRepository.findById(followee).orElseThrow(() -> new AppException(StatusCode.NOT_FOUND));
+        userRepository.findById(follower).orElseThrow(() -> new AppException(StatusCode.NOT_FOUND));
+        userRepository.findById(followee).orElseThrow(() -> new AppException(StatusCode.NOT_FOUND));
 
         return followRepository.existsByFollowerIdAndFolloweeId(follower, followee);
     }
@@ -72,7 +72,7 @@ public class FollowServiceImpl implements FollowService {
 
     /** 1 dòng trong bảng follow thay cho việc mutate 2 Set rồi save 2 document như bản Mongo. */
     private void updateFollowRelation(String userId, String targetId, boolean isFollow) {
-        if (!accountRepository.existsById(targetId) || !accountRepository.existsById(userId))
+        if (!userRepository.existsById(targetId) || !userRepository.existsById(userId))
             throw new AppException(StatusCode.ACCOUNT_NOT_EXISTED);
 
         if (isFollow) {

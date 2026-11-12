@@ -30,7 +30,7 @@ public class Notification {
     @Column(name = "recipient_id", length = 36, nullable = false)
     private String recipientId;
 
-    /** Reference — lookup Account theo id này khi đọc để lấy displayName/avatar */
+    /** Reference — lookup User theo id này khi đọc để lấy displayName/avatar */
     @Column(name = "sender_id", length = 36)
     private String senderId;
 

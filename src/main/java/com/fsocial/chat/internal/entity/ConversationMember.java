@@ -7,7 +7,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import com.fsocial.shared.persistence.AbstractEntity;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 
 @Getter
 @Setter
@@ -25,7 +25,7 @@ public class ConversationMember extends AbstractEntity<String> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    Account user;
+    User user;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default

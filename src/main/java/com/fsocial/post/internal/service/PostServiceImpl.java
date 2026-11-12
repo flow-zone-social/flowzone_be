@@ -4,7 +4,7 @@ import com.fsocial.post.internal.dto.*;
 import com.fsocial.shared.response.ApiDataCursor;
 import com.fsocial.notification.internal.dto.NotificationDTO;
 
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 import com.fsocial.post.internal.entity.Post;
 import com.fsocial.post.internal.entity.PostLike;
 import com.fsocial.shared.response.SearchPageResponse;
@@ -45,7 +45,7 @@ import com.fsocial.post.internal.repository.PostLikeRepository;
 import com.fsocial.post.internal.repository.PostRepository;
 import com.fsocial.user.api.ActorSnapshotDTO;
 import com.fsocial.user.api.UserApi;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +54,7 @@ import com.fsocial.user.internal.repository.AccountRepository;
 public class PostServiceImpl implements PostService {
     PostRepository postRepository;
     PostLikeRepository postLikeRepository;
-    AccountRepository accountRepository;
+    UserRepository userRepository;
     CommentRepository commentRepository;
     AttachmentsRepository attachmentsRepository;
     UserApi userApi;
@@ -69,7 +69,7 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public PostDTO createPost(PostRequest postRequest) {
         MediaItemDTO[] mediaItems = mediaApi.uploadValidMedia(postRequest.getMedia(), AttachmentType.POST);
-        Account owner = accountRepository.findById(postRequest.getUserId())
+        User owner = userRepository.findById(postRequest.getUserId())
                 .orElseThrow(() -> new AppException("Không tìm thấy người dùng", StatusCode.USER_NOT_FOUND));
         try {
             Post post = Post.builder()
@@ -148,7 +148,7 @@ public class PostServiceImpl implements PostService {
     public PostDTO sharePost(PostShareRequest postRequest) {
         Post origin = postRepository.findById(postRequest.getOriginPostId())
                 .orElseThrow(() -> new AppException("Không tìm thấy bài viết gốc", StatusCode.POST_NOT_FOUND));
-        Account owner = accountRepository.findById(postRequest.getUserId())
+        User owner = userRepository.findById(postRequest.getUserId())
                 .orElseThrow(() -> new AppException("Không tìm thấy người dùng", StatusCode.USER_NOT_FOUND));
 
         Post post = Post.builder()

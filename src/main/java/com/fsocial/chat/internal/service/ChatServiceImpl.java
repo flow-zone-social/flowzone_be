@@ -11,7 +11,7 @@ import com.fsocial.chat.internal.enums.ConversationType;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.chat.internal.mapper.ChatMapper;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 import com.fsocial.chat.internal.repository.ConversationMemberRepository;
 import com.fsocial.chat.internal.repository.ConversationRepository;
 import com.fsocial.chat.internal.repository.MessageRepository;
@@ -48,7 +48,7 @@ public class ChatServiceImpl implements ChatService {
     ConversationRepository conversationRepository;
     ConversationMemberRepository conversationMemberRepository;
     MessageRepository messageRepository;
-    AccountRepository accountRepository;
+    UserRepository userRepository;
     UserApi userApi;
     ChatMapper chatMapper;
     private final OnlineServiceImpl onlineServiceImpl;
@@ -140,7 +140,7 @@ public class ChatServiceImpl implements ChatService {
         for (String memberId : allMemberIds) {
             conversationMemberRepository.save(ConversationMember.builder()
                     .conversation(conversation)
-                    .user(accountRepository.getReferenceById(memberId))
+                    .user(userRepository.getReferenceById(memberId))
                     .role(memberId.equals(userId) ? com.fsocial.chat.internal.enums.MemberRole.OWNER : com.fsocial.chat.internal.enums.MemberRole.MEMBER)
                     .build());
         }
@@ -196,7 +196,7 @@ public class ChatServiceImpl implements ChatService {
         Message replyTo = request.getReplyToId() == null ? null : messageRepository.getReferenceById(request.getReplyToId());
         Message message = messageRepository.save(Message.builder()
                 .conversation(conversationRef)
-                .sender(accountRepository.getReferenceById(userId))
+                .sender(userRepository.getReferenceById(userId))
                 .content(request.getContent())
                 .messageType(request.getMessageType() == null ? com.fsocial.chat.internal.enums.MessageType.TEXT : request.getMessageType())
                 .replyTo(replyTo)

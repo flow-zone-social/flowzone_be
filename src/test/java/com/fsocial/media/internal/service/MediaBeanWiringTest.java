@@ -5,7 +5,7 @@ import com.fsocial.media.api.MediaApi;
 import com.fsocial.media.internal.mapper.AttachmentMapper;
 import com.fsocial.media.internal.repository.AttachmentsRepository;
 import com.fsocial.media.internal.util.MediaUploadUtils;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -25,8 +25,8 @@ class MediaBeanWiringTest {
                     () -> mock(AttachmentsRepository.class));
             ctx.registerBean("attachmentMapper", AttachmentMapper.class,
                     () -> mock(AttachmentMapper.class));
-            ctx.registerBean("accountRepository", AccountRepository.class,
-                    () -> mock(AccountRepository.class));
+            ctx.registerBean("userRepository", UserRepository.class,
+                    () -> mock(UserRepository.class));
             ctx.registerBean("entityManager", EntityManager.class,
                     () -> mock(EntityManager.class));
             ctx.registerBean("cloudinary", Cloudinary.class,

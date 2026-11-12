@@ -1,13 +1,13 @@
 package com.fsocial;
 
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 import com.fsocial.comment.internal.entity.Comment;
 import com.fsocial.post.internal.dto.PostFeedRow;
 import com.fsocial.post.internal.entity.Post;
 import com.fsocial.post.internal.entity.PostLike;
 import com.fsocial.media.internal.entity.Attachments;
 import com.fsocial.media.api.AttachmentType;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 import com.fsocial.media.internal.repository.AttachmentsRepository;
 import com.fsocial.comment.internal.repository.CommentRepository;
 import com.fsocial.post.internal.repository.PostLikeRepository;
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MigrationSanityTest {
 
     @Autowired
-    private AccountRepository accountRepository;
+    private UserRepository userRepository;
     @Autowired
     private AttachmentsRepository attachmentsRepository;
     @Autowired
@@ -49,7 +49,7 @@ class MigrationSanityTest {
 
     @Test
     void post_withMediaAndTags_roundTrips() {
-        Account owner = accountRepository.save(Account.builder().username("sanity_" + System.nanoTime()).build());
+        User owner = userRepository.save(User.builder().username("sanity_" + System.nanoTime()).build());
 
         Post post = postRepository.save(Post.builder().owner(owner).text("hello")
                 .tags(List.of("travel", "food", "tech")).build());
@@ -73,7 +73,7 @@ class MigrationSanityTest {
 
     @Test
     void likingTwice_countsAsOne() {
-        Account owner = accountRepository.save(Account.builder().username("sanity_" + System.nanoTime()).build());
+        User owner = userRepository.save(User.builder().username("sanity_" + System.nanoTime()).build());
         Post post = postRepository.save(Post.builder().owner(owner).text("hello").build());
 
         postLikeRepository.save(new PostLike(post.getId(), owner.getId()));
@@ -89,7 +89,7 @@ class MigrationSanityTest {
 
     @Test
     void deletingPost_cascadesLikeTagMedia() {
-        Account owner = accountRepository.save(Account.builder().username("sanity_" + System.nanoTime()).build());
+        User owner = userRepository.save(User.builder().username("sanity_" + System.nanoTime()).build());
         Post post = postRepository.save(Post.builder().owner(owner).text("hello").build());
         post.addMedia(Attachments.builder()
                 .url("http://a/1.png")
@@ -114,7 +114,7 @@ class MigrationSanityTest {
 
     @Test
     void commentWithReplies_findByPostIdReturnsOnlyRoots() {
-        Account owner = accountRepository.save(Account.builder().username("sanity_" + System.nanoTime()).build());
+        User owner = userRepository.save(User.builder().username("sanity_" + System.nanoTime()).build());
         Post post = postRepository.save(Post.builder().owner(owner).text("hello").build());
 
         Comment root = commentRepository.saveAndFlush(
@@ -137,10 +137,10 @@ class MigrationSanityTest {
      */
     @Test
     void findPostsByOwnerAndByIds_returnEnrichedRows() {
-        Account owner = accountRepository.save(Account.builder()
+        User owner = userRepository.save(User.builder()
                 .username("sanity_" + System.nanoTime()).displayName("Owner Sanity").avatar("http://a/avatar.png")
                 .build());
-        Account requester = accountRepository.save(Account.builder()
+        User requester = userRepository.save(User.builder()
                 .username("sanity_" + System.nanoTime()).build());
 
         Post post = postRepository.save(Post.builder().owner(owner).text("hello").html("<p>hello</p>").build());

@@ -1,7 +1,7 @@
 package com.fsocial.user.internal.repository;
 
 import com.fsocial.user.api.ActorSnapshotDTO;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,18 +13,18 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AccountRepository extends JpaRepository<Account, String> {
-    @Query("select a from Account a left join fetch a.role where a.username = :username")
-    Optional<Account> findByUsername(@Param("username") String username);
-    Optional<Account> findByEmail(String email);
-    Optional<Account> findByUsernameOrEmail(String username, String email);
+public interface UserRepository extends JpaRepository<User, String> {
+    @Query("select a from User a left join fetch a.role where a.username = :username")
+    Optional<User> findByUsername(@Param("username") String username);
+    Optional<User> findByEmail(String email);
+    Optional<User> findByUsernameOrEmail(String username, String email);
     long countByUsername(String username);
     long countByEmail(String email);
     long countByUsernameOrEmail(String username, String email);
 
     @Query(value = """
             select cast(extract(hour from created_at) as int) as h, count(*) as c
-            from account where created_at between :startDate and :endDate
+            from users where created_at between :startDate and :endDate
             group by 1 order by 1
             """, nativeQuery = true)
     List<Object[]> countByCreatedAtByHoursRaw(@Param("startDate") LocalDateTime startDate,
@@ -32,7 +32,7 @@ public interface AccountRepository extends JpaRepository<Account, String> {
 
     @Query(value = """
             select to_char(created_at, 'YYYY-MM-DD') as d, count(*) as c
-            from account where created_at between :startDate and :endDate
+            from users where created_at between :startDate and :endDate
             group by 1 order by 1
             """, nativeQuery = true)
     List<Object[]> countByCreatedAtByDateRaw(@Param("startDate") LocalDateTime startDate,
@@ -53,19 +53,19 @@ public interface AccountRepository extends JpaRepository<Account, String> {
     record HourCountResult(Integer _id, Integer count) {}
     record DateCountResult(String _id, Long count) {}
 
-    @Query("select new com.fsocial.user.api.ActorSnapshotDTO(a.id, a.displayName, a.avatar) from Account a where a.id = :userId")
+    @Query("select new com.fsocial.user.api.ActorSnapshotDTO(a.id, a.displayName, a.avatar) from User a where a.id = :userId")
     Optional<ActorSnapshotDTO> findOwnerById(@Param("userId") String userId);
 
     /** Batch lookup — tránh N+1 khi build danh sách post. */
-    @Query("select new com.fsocial.user.api.ActorSnapshotDTO(a.id, a.displayName, a.avatar) from Account a where a.id in :userIds")
+    @Query("select new com.fsocial.user.api.ActorSnapshotDTO(a.id, a.displayName, a.avatar) from User a where a.id in :userIds")
     List<ActorSnapshotDTO> findOwnersByIdIn(@Param("userIds") List<String> userIds);
 
     @Query("""
-            select a from Account a
+            select a from User a
             where lower(a.displayName) like lower(concat('%', :keyword, '%'))
                or lower(a.firstName)   like lower(concat('%', :keyword, '%'))
                or lower(a.lastName)    like lower(concat('%', :keyword, '%'))
                or lower(a.email)       like lower(concat('%', :keyword, '%'))
             """)
-    List<Account> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+    List<User> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 }

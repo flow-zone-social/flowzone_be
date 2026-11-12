@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import com.fsocial.shared.persistence.AbstractEntity;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 
 @Getter
 @Setter
@@ -28,7 +28,7 @@ public class Message extends AbstractEntity<String> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
-    Account sender;
+    User sender;
 
     @Column(name = "content", columnDefinition = "TEXT")
     String content;

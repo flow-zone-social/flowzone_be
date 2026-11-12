@@ -48,7 +48,7 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
             FROM ConversationMember cm
             JOIN cm.conversation c
             JOIN ConversationMember mem ON mem.conversation = c AND mem.leftAt IS NULL
-            JOIN Account ac ON ac.id = mem.user.id
+            JOIN User ac ON ac.id = mem.user.id
             LEFT JOIN Message lm ON lm.conversation = c
                 AND lm.createdAt = (SELECT MAX(m3.createdAt) FROM Message m3 WHERE m3.conversation = c)
             WHERE cm.user.id = :senderId

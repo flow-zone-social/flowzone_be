@@ -147,7 +147,7 @@ public class NotificationServiceImpl implements NotificaitonService {
                 .build();
     }
 
-    /** Lookup Account theo senderId/aggregatedSenderIds, gán vào actor/aggregatedActors */
+    /** Lookup User theo senderId/aggregatedSenderIds, gán vào actor/aggregatedActors */
     private void enrichActors(List<NotificationResponse> items) {
         if (items.isEmpty()) return;
 

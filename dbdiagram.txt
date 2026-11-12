@@ -1,6 +1,6 @@
 // ===== ACCOUNT / AUTH =====
 
-Table account {
+Table users {
   id varchar(36) [pk]
   username varchar(64) [not null, unique]
   password varchar
@@ -52,7 +52,7 @@ Table role_permission {
 Table token {
   id varchar(36) [pk]
   token text
-  account_id varchar(36) [unique]
+  user_id varchar(36) [unique]
 }
 
 Table refresh_token {
@@ -342,41 +342,41 @@ Table email_template_field {
 
 // ===== REFERENCES =====
 
-Ref: account.role_id > role.id
-Ref: token.account_id - account.id
-Ref: refresh_token.username > account.username
+Ref: users.role_id > role.id
+Ref: token.user_id - users.id
+Ref: refresh_token.username > users.username
 
 Ref: role_permission.role_id > role.id
 Ref: role_permission.permission_name > permission.name
 
-Ref: device_token.user_id > account.id
-Ref: follow.follower_id > account.id
-Ref: follow.followee_id > account.id
+Ref: device_token.user_id > users.id
+Ref: follow.follower_id > users.id
+Ref: follow.followee_id > users.id
 
-Ref: post.owner_id > account.id
+Ref: post.owner_id > users.id
 Ref: attachments.post_id > post.id
 Ref: post_like.post_id > post.id
-Ref: post_like.user_id > account.id
-Ref: seen_post.user_id > account.id
+Ref: post_like.user_id > users.id
+Ref: seen_post.user_id > users.id
 Ref: seen_post.post_id > post.id
-Ref: user_interest.user_id > account.id
+Ref: user_interest.user_id > users.id
 
 Ref: comment.post_id > post.id
 Ref: comment.parent_id > comment.id
-Ref: comment.user_id > account.id
+Ref: comment.user_id > users.id
 Ref: comment_media.comment_id > comment.id
 Ref: comment_like.comment_id > comment.id
-Ref: comment_like.user_id > account.id
+Ref: comment_like.user_id > users.id
 
 Ref: complaint_detail.complaint_id > complaint.id
-Ref: complaint_detail.user_id > account.id
+Ref: complaint_detail.user_id > users.id
 Ref: complaint_detail.term_of_service_id > term_of_service.id
 
-Ref: notification.recipient_id > account.id
-Ref: notification.sender_id > account.id
+Ref: notification.recipient_id > users.id
+Ref: notification.sender_id > users.id
 Ref: notification_sender.notification_id > notification.id
 Ref: notification_metadata.notification_id > notification.id
-Ref: notification_preference.user_id > account.id
+Ref: notification_preference.user_id > users.id
 Ref: preference_setting.preference_id > notification_preference.id
 Ref: template_translation.template_id > notification_template.id
 Ref: template_default_data.template_id > notification_template.id

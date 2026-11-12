@@ -1,6 +1,6 @@
 package com.fsocial.user.internal.util;
 
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 
 public final class DisplayNameUtils {
 
@@ -15,7 +15,7 @@ public final class DisplayNameUtils {
         return last + " " + first;
     }
 
-    public static String build(Account account) {
+    public static String build(User account) {
         if (account == null) return "";
         return build(account.getLastName(), account.getFirstName());
     }

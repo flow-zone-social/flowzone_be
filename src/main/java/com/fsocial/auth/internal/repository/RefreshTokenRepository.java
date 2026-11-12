@@ -17,7 +17,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Stri
     @Query("delete from RefreshToken t where t.token = :token")
     int deleteByToken(@Param("token") String token);
 
-    long countByAccountId(String accountId);
-    Optional<RefreshToken> findFirstByAccountIdOrderByExpiryDateAsc(String accountId);
-    Optional<RefreshToken> findFirstByAccountIdOrderByExpiryDateDesc(String accountId);
+    long countByUserId(String accountId);
+    Optional<RefreshToken> findFirstByUserIdOrderByExpiryDateAsc(String accountId);
+    Optional<RefreshToken> findFirstByUserIdOrderByExpiryDateDesc(String accountId);
 }

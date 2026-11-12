@@ -10,7 +10,7 @@ import com.fsocial.media.api.AttachmentType;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.media.internal.mapper.AttachmentMapper;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 import com.fsocial.media.internal.repository.AttachmentsRepository;
 import com.fsocial.media.internal.service.AttachmentsService;
 import jakarta.persistence.EntityManager;
@@ -35,7 +35,7 @@ public class AttachmentsServiceImpl implements AttachmentsService {
 
     AttachmentsRepository attachmentsRepository;
     AttachmentMapper attachmentMapper;
-    AccountRepository accountRepository;
+    UserRepository userRepository;
     EntityManager entityManager;
 
     @Override
@@ -45,7 +45,7 @@ public class AttachmentsServiceImpl implements AttachmentsService {
                 .resourceType(dto.getResourceType())
                 .fileType(dto.getFileType())
                 .size(dto.getSize())
-                .owner(dto.getOwnerId() == null ? null : accountRepository.getReferenceById(dto.getOwnerId()))
+                .owner(dto.getOwnerId() == null ? null : userRepository.getReferenceById(dto.getOwnerId()))
                 .publicId(dto.getPublicId())
                 .width(dto.getWidth())
                 .height(dto.getHeight())
@@ -105,7 +105,7 @@ public class AttachmentsServiceImpl implements AttachmentsService {
 //    }
 
 //    public void userExists(String userId) throws AppCheckedException {
-//        Map<String, Boolean> userExists = accountRepository.e(userId).getData();
+//        Map<String, Boolean> userExists = userRepository.e(userId).getData();
 //        //check user exists
 //        if (!userExists.get("exists")) {
 //            throw new AppCheckedException("User not found", StatusCode.USER_NOT_FOUND);

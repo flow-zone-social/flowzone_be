@@ -103,6 +103,13 @@ public enum StatusCode implements CodeEnum {
     TERM_OF_SERVICE_NOT_FOUND(305, "Term of service not found", HttpStatus.NOT_FOUND),
     COMPLAIN_NOT_FOUND(307, "Complain Not Found", HttpStatus.NOT_FOUND),
     FAQ_NOT_FOUND(317, "FAQ not found", HttpStatus.NOT_FOUND),
+
+    // ===== Finance (category / product / transaction) =====
+    FIN_CATEGORY_NOT_FOUND(320, "Hạng mục không tồn tại", HttpStatus.NOT_FOUND),
+    FIN_CATEGORY_NAME_EXISTED(321, "Tên hạng mục đã tồn tại", HttpStatus.CONFLICT),
+    FIN_PRODUCT_NOT_FOUND(323, "Phân loại không tồn tại", HttpStatus.NOT_FOUND),
+    FIN_PRODUCT_NAME_EXISTED(324, "Tên phân loại đã tồn tại trong hạng mục", HttpStatus.CONFLICT),
+    FIN_TRANSACTION_NOT_FOUND(326, "Giao dịch không tồn tại", HttpStatus.NOT_FOUND),
     ;
 
     private final int code;
