@@ -44,7 +44,7 @@ public class FinCategoryController {
     public ApiResponse<Void> delete(@PathVariable String id, @AuthenticationPrincipal Jwt jwt) {
         finCategoryService.delete(jwt.getSubject(), id);
         return ApiResponse.<Void>builder().message("Xóa hạng mục thành công").build();
-    }~
+    }
 
     @GetMapping
     public ApiResponse<List<FinCategoryDTO>> getAll(@AuthenticationPrincipal Jwt jwt) {
