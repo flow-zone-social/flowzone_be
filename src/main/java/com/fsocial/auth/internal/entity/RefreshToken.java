@@ -25,8 +25,8 @@ public class RefreshToken {
     @Column(name = "token", nullable = false, unique = true, columnDefinition = "text")
     String token;
 
-    @Column(name = "account_id", length = 36, nullable = false)
-    String accountId;
+    @Column(name = "user_id", length = 36, nullable = false)
+    String userId;
 
     @Column(name = "expiry_date", nullable = false)
     Instant expiryDate;

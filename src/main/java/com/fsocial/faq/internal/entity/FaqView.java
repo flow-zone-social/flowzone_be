@@ -1,6 +1,6 @@
 package com.fsocial.faq.internal.entity;
 
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -34,7 +34,7 @@ public class FaqView {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    Account user;
+    User user;
 
     @Column(name = "viewed_at", nullable = false)
     @Builder.Default

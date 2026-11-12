@@ -10,7 +10,7 @@ import com.fsocial.post.internal.mapper.PostMapper;
 
 /**
  * Members / lastMessage không map ở đây — service tự build vì cần batch-resolve
- * qua AccountRepository/MessageRepository (tránh N+1), giống PostMapper.
+ * qua UserRepository/MessageRepository (tránh N+1), giống PostMapper.
  */
 @Mapper(componentModel = "spring")
 public interface ChatMapper {

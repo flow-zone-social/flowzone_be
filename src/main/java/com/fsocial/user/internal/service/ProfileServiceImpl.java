@@ -3,12 +3,12 @@ package com.fsocial.user.internal.service;
 import com.fsocial.user.internal.dto.ProfileResponse;
 import com.fsocial.user.internal.dto.UpdateProfileRequest;
 import com.fsocial.user.internal.dto.AccountResponse;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 import com.fsocial.media.api.AttachmentType;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.user.internal.mapper.AccountMapper;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 import com.fsocial.user.internal.repository.FollowRepository;
 import com.fsocial.user.internal.service.ProfileService;
 import com.fsocial.media.api.MediaApi;
@@ -29,7 +29,7 @@ import java.util.HashSet;
 @Slf4j
 public class ProfileServiceImpl implements ProfileService {
 
-    AccountRepository accountRepository;
+    UserRepository userRepository;
     FollowRepository followRepository;
     AccountMapper accountMapper;
     MediaApi mediaApi;
@@ -37,27 +37,27 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileResponse updateAvatar(MultipartFile file, String userId) {
         String avatar = uploadImage(file, AttachmentType.AVATAR);
-        Account account = accountRepository.findById(userId)
+        User account = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(StatusCode.UPLOAD_AVATAR_FAIL));
 
         account.setAvatar(avatar);
-        return accountMapper.toProfileResponse(accountRepository.save(account));
+        return accountMapper.toProfileResponse(userRepository.save(account));
     }
 
     @Override
     public ProfileResponse updateBackground(MultipartFile file, String userId) {
         String background = uploadImage(file, AttachmentType.BACKGROUND);
-        Account account = accountRepository.findById(userId)
+        User account = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(StatusCode.UPLOAD_AVATAR_FAIL));
 
         account.setBackground(background);
-        return accountMapper.toProfileResponse(accountRepository.save(account));
+        return accountMapper.toProfileResponse(userRepository.save(account));
     }
 
     @Override
     @Transactional
     public AccountResponse updatePersonalInfo(UpdateProfileRequest request, String userId) {
-        Account account = accountRepository.findById(userId)
+        User account = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(StatusCode.USER_NOT_FOUND));
 
         account.setFirstName(request.getFirstName());
@@ -67,7 +67,7 @@ public class ProfileServiceImpl implements ProfileService {
         account.setAddress(request.getAddress());
         account.setBio(request.getBio());
 
-        Account updatedAccount = accountRepository.save(account);
+        User updatedAccount = userRepository.save(account);
 
         return AccountResponse.builder()
                 .id(updatedAccount.getId())

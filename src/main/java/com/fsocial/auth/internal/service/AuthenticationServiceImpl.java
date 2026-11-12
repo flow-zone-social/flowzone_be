@@ -6,7 +6,7 @@ import com.fsocial.notification.internal.dto.NotificationDTO;
 import com.fsocial.auth.internal.dto.AccountLoginRequest;
 import com.fsocial.auth.internal.dto.AuthenticationResponse;
 import com.fsocial.auth.internal.dto.IntrospectResponse;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 import com.fsocial.auth.internal.entity.AuthProviderCredential;
 import com.fsocial.user.internal.rbac.Role;
 import com.fsocial.auth.internal.entity.Token;
@@ -16,7 +16,7 @@ import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.shared.exception.*;
 import com.fsocial.notification.api.NotificationEvent;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 import com.fsocial.auth.internal.repository.AuthProviderRepository;
 import com.fsocial.user.internal.rbac.RoleRepository;
 import com.fsocial.auth.internal.repository.TokenRepository;
@@ -43,7 +43,7 @@ import java.util.Optional;
 @Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    AccountRepository accountRepository;
+    UserRepository userRepository;
     AuthProviderRepository authProviderRepository;
     PasswordEncoder passwordEncoder;
     JwtService jwtService;
@@ -56,13 +56,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse login(AccountLoginRequest request, String userAgent, HttpServletRequest httpRequest) {
-        Account account = accountRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
+        User account = userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
                 .orElseThrow(() -> {
                     log.warn("Sai tên tài khoản hoặc mật khẩu: {}", request.getUsername());
                     return new AppException(StatusCode.LOGIN_FAILED);
                 });
 
-        authProviderRepository.findByAccount_IdAndProvider(account.getId(), AuthProvider.LOCAL)
+        authProviderRepository.findByUser_IdAndProvider(account.getId(), AuthProvider.LOCAL)
                 .filter(auth -> auth.getPassword() != null && passwordEncoder.matches(request.getPassword(), auth.getPassword()))
                 .orElseThrow(() -> {
                     log.warn("Sai tên tài khoản hoặc mật khẩu: {}", request.getUsername());
@@ -80,12 +80,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return IntrospectResponse.builder().valid(valid).build();
     }
 
-    public AuthenticationResponse saveToken(Account account, String userAgent, HttpServletRequest httpRequest){
+    public AuthenticationResponse saveToken(User account, String userAgent, HttpServletRequest httpRequest){
 
         String ipAddress = httpRequest.getRemoteAddr();
         String accessToken = jwtService.generateToken(account.getId());
 
-        Optional<Token> existingToken = tokenRepository.findByAccount(account);
+        Optional<Token> existingToken = tokenRepository.findByUser(account);
         Token tokenEntity;
         if (existingToken.isPresent()) {
             tokenEntity = existingToken.get();
@@ -93,7 +93,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } else {
             tokenEntity = Token.builder().token(accessToken).build();
         }
-        tokenEntity.setAccount(account);
+        tokenEntity.setUser(account);
         tokenRepository.save(tokenEntity);
 
         String refreshToken = refreshTokenService.createRefreshToken(account.getId(), userAgent, ipAddress).getToken();
@@ -130,19 +130,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Optional<AuthProviderCredential> linkedAuth = authProviderRepository
                 .findByProviderAndProviderUserId(AuthProvider.GOOGLE, googleUserInfo.googleId());
         if (linkedAuth.isPresent()) {
-            Account existingAccount = linkedAuth.get().getAccount();
+            User existingAccount = linkedAuth.get().getUser();
             if (!existingAccount.isStatus()) throw new AppException(StatusCode.ACCOUNT_BANNED);
             return this.saveToken(existingAccount, userAgent, httpRequest);
         }
 
         // 2: account đã tồn tại (vd đăng ký local cùng email) -> link thêm Google vào account đó
-        Optional<Account> accountByEmail = accountRepository.findByEmail(googleUserInfo.email());
+        Optional<User> accountByEmail = userRepository.findByEmail(googleUserInfo.email());
         if (accountByEmail.isPresent()) {
-            Account existingAccount = accountByEmail.get();
+            User existingAccount = accountByEmail.get();
             if (!existingAccount.isStatus()) throw new AppException(StatusCode.ACCOUNT_BANNED);
 
             authProviderRepository.save(AuthProviderCredential.builder()
-                    .account(existingAccount)
+                    .user(existingAccount)
                     .provider(AuthProvider.GOOGLE)
                     .providerUserId(googleUserInfo.googleId())
                     .build());
@@ -154,7 +154,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Role role = roleRepository.findByName("USER").orElseThrow(() -> new AppException(StatusCode.ROLE_NOT_FOUND));
 
         String seed = googleUserInfo.email();
-        Account accountRegister = accountRepository.save(Account.builder()
+        User accountRegister = userRepository.save(User.builder()
                         .email(googleUserInfo.email())
                         .firstName(googleUserInfo.givenName())
                         .lastName(googleUserInfo.familyName())
@@ -167,7 +167,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build());
 
         authProviderRepository.save(AuthProviderCredential.builder()
-                .account(accountRegister)
+                .user(accountRegister)
                 .provider(AuthProvider.GOOGLE)
                 .providerUserId(googleUserInfo.googleId())
                 .build());

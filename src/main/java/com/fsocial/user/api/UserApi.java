@@ -1,6 +1,10 @@
 package com.fsocial.user.api;
 
+import com.fsocial.user.internal.dto.AccountResponse;
+import com.fsocial.user.internal.entity.User;
+
 import java.util.List;
+import java.util.Optional;
 
 public interface UserApi {
 
@@ -17,4 +21,6 @@ public interface UserApi {
 
     /** owner public, chính chủ, hoặc requester đang follow owner thì mới xem được. */
     boolean canView(String ownerId, String requesterId);
+
+    User findById(String id);
 }

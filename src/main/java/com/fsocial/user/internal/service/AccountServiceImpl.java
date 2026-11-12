@@ -11,7 +11,7 @@ import com.fsocial.user.internal.dto.AccountStatisticRegisterLongDateDTO;
 import com.fsocial.user.internal.dto.DuplicationResponse;
 import com.fsocial.user.internal.dto.ManageUserResponse;
 import com.fsocial.shared.response.SearchPageResponse;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 import com.fsocial.auth.internal.entity.AuthProviderCredential;
 import com.fsocial.auth.internal.entity.RefreshToken;
 import com.fsocial.auth.internal.entity.Token;
@@ -20,7 +20,6 @@ import com.fsocial.shared.redis.RedisKeyType;
 import com.fsocial.shared.exception.AppException;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.user.internal.mapper.AccountMapper;
-import com.fsocial.user.internal.repository.AccountRepository;
 import com.fsocial.auth.internal.repository.AuthProviderRepository;
 import com.fsocial.auth.internal.repository.RefreshTokenRepository;
 import com.fsocial.user.internal.rbac.RoleRepository;
@@ -38,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.fsocial.user.internal.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -52,7 +52,7 @@ import java.util.*;
 @Slf4j
 public class AccountServiceImpl implements AccountService, UserApi {
 
-    AccountRepository accountRepository;
+    UserRepository userRepository;
     AuthProviderRepository authProviderRepository;
     FollowService followService;
     RoleRepository roleRepository;
@@ -69,7 +69,7 @@ public class AccountServiceImpl implements AccountService, UserApi {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AccountResponse persistAccount(AccountRegisterRequest request) {
-        Account account = saveAccount(request);
+        User account = saveAccount(request);
 //        createProfile(account, request);
         otpService.deleteOtp(request.getEmail(), RedisKeyType.REGISTER.getRedisKeyPrefix());
         return toAccountResponse(account);
@@ -78,18 +78,18 @@ public class AccountServiceImpl implements AccountService, UserApi {
     @Override
     @Transactional(readOnly = true)
     public AccountResponse getUser(String id) {
-        return accountRepository.findById(id)
+        return userRepository.findById(id)
                 .map(this::toAccountResponse)
                 .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
     }
 
     @Override
     public void resetPassword(String email, String newPassword) {
-        Account account = accountRepository.findByEmail(email)
+        User account = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
 
         AuthProviderCredential localAuth = authProviderRepository
-                .findByAccount_IdAndProvider(account.getId(), AuthProvider.LOCAL)
+                .findByUser_IdAndProvider(account.getId(), AuthProvider.LOCAL)
                 .orElseThrow(() -> new AppException(StatusCode.LOCAL_AUTH_NOT_FOUND));
 
         localAuth.setPassword(passwordEncoder.encode(newPassword));
@@ -99,8 +99,8 @@ public class AccountServiceImpl implements AccountService, UserApi {
 
     @Override
     public ApiResponse<DuplicationResponse> checkDuplication(DuplicationRequest request) {
-        boolean usernameExisted = accountRepository.countByUsername(request.getUsername()) > 0;
-        boolean emailExisted = accountRepository.countByEmail(request.getEmail()) > 0;
+        boolean usernameExisted = userRepository.countByUsername(request.getUsername()) > 0;
+        boolean emailExisted = userRepository.countByEmail(request.getEmail()) > 0;
 
         DuplicationResponse response = DuplicationResponse.builder()
                 .username(usernameExisted ? StatusCode.USERNAME_EXISTED.getMessage() : null)
@@ -118,11 +118,11 @@ public class AccountServiceImpl implements AccountService, UserApi {
 
     @Override
     public void changePassword(String userId, String oldPassword, String newPassword) {
-        Account account = accountRepository.findById(userId)
+        User account = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
 
         AuthProviderCredential localAuth = authProviderRepository
-                .findByAccount_IdAndProvider(account.getId(), AuthProvider.LOCAL)
+                .findByUser_IdAndProvider(account.getId(), AuthProvider.LOCAL)
                 .orElseThrow(() -> new AppException(StatusCode.LOCAL_AUTH_NOT_FOUND));
 
         if (!passwordEncoder.matches(oldPassword, localAuth.getPassword())) {
@@ -136,15 +136,15 @@ public class AccountServiceImpl implements AccountService, UserApi {
 
     @Override
     public boolean existsById(String id) {
-        return accountRepository.findById(id).isPresent();
+        return userRepository.findById(id).isPresent();
     }
 
     @Override
     public List<AccountStatisticRegisterDTO> countByCreatedAtByHours(LocalDateTime startDay, LocalDateTime endDay) {
-        List<AccountRepository.HourCountResult> results = accountRepository.countByCreatedAtByHours(startDay, endDay);
+        List<UserRepository.HourCountResult> results = userRepository.countByCreatedAtByHours(startDay, endDay);
 
         Map<Integer, Integer> map = new HashMap<>();
-        for (AccountRepository.HourCountResult row : results) {
+        for (UserRepository.HourCountResult row : results) {
             if (row._id() != null) map.put(row._id(), row.count() != null ? row.count() : 0);
         }
 
@@ -157,11 +157,11 @@ public class AccountServiceImpl implements AccountService, UserApi {
 
     @Override
     public List<AccountStatisticRegisterLongDateDTO> countByCreatedAtByStartEnd(LocalDateTime startDay, LocalDateTime endDay) {
-        List<AccountRepository.DateCountResult> results = accountRepository.countByCreatedAtByDate(startDay, endDay);
+        List<UserRepository.DateCountResult> results = userRepository.countByCreatedAtByDate(startDay, endDay);
 
         Map<String, Long> dateCountMap = new HashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        for (AccountRepository.DateCountResult row : results) {
+        for (UserRepository.DateCountResult row : results) {
             if (row._id() != null) dateCountMap.put(row._id(), row.count() != null ? row.count() : 0L);
         }
 
@@ -181,14 +181,14 @@ public class AccountServiceImpl implements AccountService, UserApi {
     @Override
     @Transactional
     public String banUser(String userId) {
-        Account banAccount = accountRepository.findById(userId)
+        User banAccount = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
 
-        Optional<Token> tokenAccount = tokenRepository.findByAccount(banAccount);
-        Optional<RefreshToken> refreshToken = refreshTokenRepository.findFirstByAccountIdOrderByExpiryDateDesc(banAccount.getId());
+        Optional<Token> tokenAccount = tokenRepository.findByUser(banAccount);
+        Optional<RefreshToken> refreshToken = refreshTokenRepository.findFirstByUserIdOrderByExpiryDateDesc(banAccount.getId());
 
         banAccount.setStatus(false);
-        accountRepository.save(banAccount);
+        userRepository.save(banAccount);
 
         tokenAccount.ifPresent(token -> banService.ban(token.getToken()));
         refreshToken.ifPresent(refresh -> refreshTokenRepository.deleteByToken(refresh.getToken()));
@@ -200,13 +200,13 @@ public class AccountServiceImpl implements AccountService, UserApi {
     @Transactional(readOnly = true)
     public AccountResponse getProfile(String userId) {
 
-        Optional<Account> account = Optional.of(accountRepository.findById(userId).orElseThrow(() -> new AppException(StatusCode.COMMENT_NOT_FOUND)));
+        Optional<User> account = Optional.of(userRepository.findById(userId).orElseThrow(() -> new AppException(StatusCode.COMMENT_NOT_FOUND)));
         return toAccountResponse(account.get());
     }
 
     @Override
     public ActorSnapshotDTO getOwner(String userId) {
-        Optional<ActorSnapshotDTO> owner = accountRepository.findOwnerById(userId);
+        Optional<ActorSnapshotDTO> owner = userRepository.findOwnerById(userId);
         if (owner.isEmpty()) {
             throw new AppException(StatusCode.USER_NOT_FOUND);
         }
@@ -215,12 +215,12 @@ public class AccountServiceImpl implements AccountService, UserApi {
 
     @Override
     public List<ActorSnapshotDTO> getOwners(List<String> userIds) {
-        return accountRepository.findOwnersByIdIn(userIds);
+        return userRepository.findOwnersByIdIn(userIds);
     }
 
     @Override
     public boolean canView(String ownerId, String requesterId) {
-        Account owner = accountRepository.findById(ownerId).orElse(null);
+        User owner = userRepository.findById(ownerId).orElse(null);
         return owner == null
                 || Boolean.TRUE.equals(owner.getIsPublic())
                 || ownerId.equals(requesterId)
@@ -239,7 +239,7 @@ public class AccountServiceImpl implements AccountService, UserApi {
 
     @Override
     public List<ManageUserResponse> getAllUsers() {
-        return accountRepository.findAll().stream()
+        return userRepository.findAll().stream()
                 .map(account -> ManageUserResponse.builder()
                         .id(account.getId())
                         .username(account.getUsername())
@@ -263,7 +263,7 @@ public class AccountServiceImpl implements AccountService, UserApi {
             return new SearchPageResponse<>(List.of(), safePage, safeSize, false);
         }
 
-        List<Account> accounts = accountRepository.searchByKeyword(
+        List<User> accounts = userRepository.searchByKeyword(
                 trimmedKeyword,
                 PageRequest.of(safePage, safeSize + 1)
         );
@@ -277,8 +277,8 @@ public class AccountServiceImpl implements AccountService, UserApi {
         return new SearchPageResponse<>(items, safePage, safeSize, hasMore);
     }
 
-    private Account saveAccount(AccountRegisterRequest request) {
-        Account account = accountMapper.toEntity(request);
+    private User saveAccount(AccountRegisterRequest request) {
+        User account = accountMapper.toEntity(request);
         account.setCreatedAt(LocalDateTime.now());
         account.setRole(roleRepository.findByName(DEFAULT_ROLE)
                 .orElseThrow(() -> new AppException(StatusCode.ROLE_NOT_FOUND)));
@@ -288,10 +288,10 @@ public class AccountServiceImpl implements AccountService, UserApi {
         account.setAvatar(defaultMediaProvider.pickAvatar(seed));
         account.setBackground(defaultMediaProvider.pickBackground(seed));
 
-        Account savedAccount = accountRepository.save(account);
+        User savedAccount = userRepository.save(account);
 
         authProviderRepository.save(AuthProviderCredential.builder()
-                .account(savedAccount)
+                .user(savedAccount)
                 .provider(AuthProvider.LOCAL)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build());
@@ -299,7 +299,7 @@ public class AccountServiceImpl implements AccountService, UserApi {
         return savedAccount;
     }
 
-    private AccountResponse toAccountResponse(Account account) {
+    private AccountResponse toAccountResponse(User account) {
         return AccountResponse.builder()
                 .id(account.getId())
                 .username(account.getUsername())
@@ -318,5 +318,17 @@ public class AccountServiceImpl implements AccountService, UserApi {
                 .follower(new HashSet<>(followService.getFollowers(account.getId())))
                 .following(new HashSet<>(followService.getFollowing(account.getId())))
                 .build();
+    }
+
+    @Override
+    public User findById(String id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
+
+        if(!user.isStatus()) {
+            throw new AppException(StatusCode.ACCOUNT_BANNED);
+        }
+
+        return user;
+
     }
 }

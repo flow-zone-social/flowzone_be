@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.UuidGenerator;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 
 @Getter
 @Setter
@@ -26,6 +26,6 @@ public class Token {
     String token;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", unique = true)
-    Account account;
+    @JoinColumn(name = "user_id", unique = true)
+    User user;
 }

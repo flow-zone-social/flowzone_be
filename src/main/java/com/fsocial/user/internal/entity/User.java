@@ -1,6 +1,7 @@
 package com.fsocial.user.internal.entity;
 
 import com.fsocial.media.internal.entity.Attachments;
+import com.fsocial.transaction.internal.entity.FinTransaction;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,8 +20,8 @@ import com.fsocial.user.internal.rbac.Role;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SuperBuilder
 @Entity
-@Table(name = "account")
-public class    Account extends AbstractEntity<String> {
+@Table(name = "users")
+public class User extends AbstractEntity<String> {
 
     @Column(name = "username", length = 64)
     String username;
@@ -75,4 +76,7 @@ public class    Account extends AbstractEntity<String> {
 
     @OneToMany(mappedBy = "owner")
     List<Attachments> attachments;
+
+    @OneToMany(mappedBy = "user")
+    List<FinTransaction> transactions;
 }

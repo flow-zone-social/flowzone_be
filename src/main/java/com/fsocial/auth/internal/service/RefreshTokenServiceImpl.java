@@ -4,7 +4,7 @@ import com.fsocial.auth.internal.dto.AuthenticationResponse;
 import com.fsocial.auth.internal.entity.RefreshToken;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.shared.exception.AppException;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 import com.fsocial.auth.internal.repository.RefreshTokenRepository;
 import com.fsocial.auth.internal.service.JwtService;
 import com.fsocial.auth.internal.service.RefreshTokenService;
@@ -31,7 +31,7 @@ import java.util.Base64;
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     RefreshTokenRepository refreshTokenRepository;
-    AccountRepository accountRepository;
+    UserRepository userRepository;
     JwtService jwtService;
 
     @NonFinal
@@ -41,19 +41,19 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     @Transactional
     public RefreshToken createRefreshToken(String accountId, String userAgent, String ipAddress) {
-        accountRepository.findById(accountId)
+        userRepository.findById(accountId)
                 .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
 
-        long tokenCount = refreshTokenRepository.countByAccountId(accountId);
+        long tokenCount = refreshTokenRepository.countByUserId(accountId);
         int MAX_REFRESH_TOKENS = 5;
         if (tokenCount >= MAX_REFRESH_TOKENS) {
-            refreshTokenRepository.findFirstByAccountIdOrderByExpiryDateAsc(accountId)
+            refreshTokenRepository.findFirstByUserIdOrderByExpiryDateAsc(accountId)
                     .ifPresent(refreshTokenRepository::delete);
         }
 
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(generateRefreshToken())
-                .accountId(accountId)
+                .userId(accountId)
                 .userAgent(userAgent)
                 .ipAddress(ipAddress)
                 .expiryDate(Instant.now().plus(expirationTime, ChronoUnit.DAYS))
@@ -89,7 +89,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         }
 
         return AuthenticationResponse.builder()
-                .accessToken(jwtService.generateToken(token.getAccountId()))
+                .accessToken(jwtService.generateToken(token.getUserId()))
                 .refreshToken(token.getToken())
                 .build();
     }

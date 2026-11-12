@@ -32,8 +32,8 @@ public class NotificationResponse {
     private boolean isRead;
     private Instant createdAt;
 
-    /** Enriched từ senderId bằng cách lookup Account, gán ở service layer */
+    /** Enriched từ senderId bằng cách lookup User, gán ở service layer */
     private ActorSnapshotDTO actor;
-    /** Enriched từ aggregatedSenderIds bằng cách lookup Account, gán ở service layer */
+    /** Enriched từ aggregatedSenderIds bằng cách lookup User, gán ở service layer */
     private List<ActorSnapshotDTO> aggregatedActors = new ArrayList<>();
 }

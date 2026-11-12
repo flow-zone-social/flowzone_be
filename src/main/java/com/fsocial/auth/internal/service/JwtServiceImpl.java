@@ -1,9 +1,9 @@
 package com.fsocial.auth.internal.service;
 
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 import com.fsocial.shared.exception.StatusCode;
 import com.fsocial.shared.exception.AppException;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 import com.fsocial.auth.internal.service.JwtService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -30,7 +30,7 @@ import java.util.Date;
 @Slf4j
 public class JwtServiceImpl implements JwtService {
 
-    AccountRepository accountRepository;
+    UserRepository userRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -42,7 +42,7 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateToken(String accountId) {
-        Account account = accountRepository.findById(accountId)
+        User account = userRepository.findById(accountId)
                 .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
 
         JWTClaimsSet claimsSet = buildClaimsSet(account);
@@ -86,7 +86,7 @@ public class JwtServiceImpl implements JwtService {
         return authorization.substring(7);
     }
 
-    private JWTClaimsSet buildClaimsSet(Account account) {
+    private JWTClaimsSet buildClaimsSet(User account) {
         String scope = account.getRole() != null ? account.getRole().getName() : "";
         log.info("[JWT-DEBUG] accountId={}, username={}, roleObj={}, roleName={}, scopeClaim='{}'",
                 account.getId(),

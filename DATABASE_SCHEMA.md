@@ -6,7 +6,7 @@ và `src/main/java/com/fsocial/postservice/entity/`).
 
 Quy ước chung:
 - PK là `VARCHAR(36)` (UUID dạng chuỗi), trừ các bảng khóa kép (composite key) liệt kê PK là 2 cột.
-- Cột audit `created_by` / `updated_by` (id account thao tác) và `created_at` / `updated_at` xuất hiện ở hầu hết bảng gốc (không có ở bảng con thuần join).
+- Cột audit `created_by` / `updated_by` (id users thao tác) và `created_at` / `updated_at` xuất hiện ở hầu hết bảng gốc (không có ở bảng con thuần join).
 - "Thay cho (Mongo)" ghi lại field/array embedded cũ để biết vì sao bảng này tồn tại.
 
 ---
@@ -32,7 +32,7 @@ Vai trò người dùng (`ROLE_USER`, `ROLE_ADMIN`, ...).
 | `name` | Tên vai trò, unique |
 | `description` | Mô tả |
 
-Quan hệ: 1 role — N `account` (`account.role_id`); N-N với `permission` qua `role_permission`.
+Quan hệ: 1 role — N `users` (`users.role_id`); N-N với `permission` qua `role_permission`.
 
 ### `role_permission`
 Bảng nối N-N role ↔ permission (JPA: `@ManyToMany` trên `Role.permissions`).
@@ -44,7 +44,7 @@ Bảng nối N-N role ↔ permission (JPA: `@ManyToMany` trên `Role.permissions
 
 Xóa role/permission → cascade xóa dòng nối (`ON DELETE CASCADE`).
 
-### `account`
+### `users`
 Bảng người dùng trung tâm — mọi bảng khác tham chiếu tới đây.
 
 | Field | Nhiệm vụ |
@@ -77,24 +77,24 @@ Quan hệ theo dõi 1 chiều (A follow B ≠ B follow A). Thay cho 2 field Set 
 
 | Field | Nhiệm vụ |
 |---|---|
-| `follower_id` (PK, FK account) | Người đi follow |
-| `followee_id` (PK, FK account) | Người được follow |
+| `follower_id` (PK, FK users) | Người đi follow |
+| `followee_id` (PK, FK users) | Người được follow |
 | `created_at` | Thời điểm follow |
 
 Ràng buộc `CHECK (follower_id <> followee_id)` — không tự follow chính mình.
 Index `followee_id` — phục vụ truy vấn "ai đang follow tôi" / đếm follower.
-Xóa account → cascade xóa mọi dòng follow liên quan (cả 2 chiều).
+Xóa users → cascade xóa mọi dòng follow liên quan (cả 2 chiều).
 
 ### `token`
-Access token hiện hành của 1 account (JWT access token lưu lại để kiểm tra/blacklist).
+Access token hiện hành của 1 users (JWT access token lưu lại để kiểm tra/blacklist).
 
 | Field | Nhiệm vụ |
 |---|---|
 | `id` (PK) | UUID |
 | `token` | Chuỗi JWT |
-| `account_id` (FK account, UNIQUE) | 1-1 với account |
+| `user_id` (FK users, UNIQUE) | 1-1 với users |
 
-Quan hệ: `@OneToOne` — mỗi account có tối đa 1 token hiện hành; xóa account → xóa token.
+Quan hệ: `@OneToOne` — mỗi users có tối đa 1 token hiện hành; xóa users → xóa token.
 
 ### `refresh_token`
 Refresh token (JWT dài hạn, 7 ngày), độc lập bảng vì có nhiều token/1 user (đa thiết bị, tối đa 5 — logic evict trong service).
@@ -119,7 +119,7 @@ Bảng bài viết — thay thế document `Post` embedded `Content`/`MediaItem[
 | Field | Nhiệm vụ |
 |---|---|
 | `id` (PK) | UUID |
-| `owner_id` (FK account) | Người đăng — thay `ActorSnapshot owner` (không còn lưu snapshot tên/avatar, luôn JOIN account để lấy dữ liệu mới nhất) |
+| `owner_id` (FK users) | Người đăng — thay `ActorSnapshot owner` (không còn lưu snapshot tên/avatar, luôn JOIN users để lấy dữ liệu mới nhất) |
 | `text` / `html` | Nội dung bài viết — thay field `Content.text/html` embedded |
 | `create_datetime` | Thời điểm đăng (dùng để sort feed theo mới nhất + tính time-decay của điểm số) |
 | `origin_post_id` (FK post, tự tham chiếu) | Post gốc khi đây là bài share lại; `NULL` nếu là bài gốc |
@@ -155,7 +155,7 @@ Ai đã like post nào — thay cho `Post.likes: List<String>` embedded (trướ
 | Field | Nhiệm vụ |
 |---|---|
 | `post_id` (PK, FK post) | |
-| `user_id` (PK, FK account) | |
+| `user_id` (PK, FK users) | |
 | `created_at` | Thời điểm like — dùng cho thông báo/audit |
 
 PK kép (`post_id`, `user_id`) tự đảm bảo 1 user chỉ like 1 lần — thay cho việc phải check trùng phần tử trong mảng embedded. Đếm like = `COUNT(*) GROUP BY post_id`; toggle like = insert/delete 1 dòng.
@@ -184,7 +184,7 @@ Gộp cả comment gốc lẫn reply vào 1 bảng tự tham chiếu — thay ch
 | `id` (PK) | UUID |
 | `post_id` (FK post) | Post chứa comment (kể cả reply cũng ghi lại `post_id` để query nhanh, tránh phải join ngược qua `parent`) |
 | `parent_id` (FK comment, tự tham chiếu, nullable) | `NULL` = comment gốc; khác `NULL` = reply của comment đó |
-| `user_id` (FK account) | Người bình luận |
+| `user_id` (FK users) | Người bình luận |
 | `text` / `html` | Nội dung |
 | `create_datetime` | Thời điểm bình luận, dùng sort theo thời gian |
 
@@ -215,7 +215,7 @@ Like cho comment/reply — thay cho `likes: List<String>` embedded trong `Commen
 | Field | Nhiệm vụ |
 |---|---|
 | `comment_id` (PK, FK comment) | |
-| `user_id` (PK, FK account) | |
+| `user_id` (PK, FK users) | |
 | `created_at` | |
 
 PK kép đảm bảo idempotent — không cần `elemMatch`/`$addToSet` như bản Mongo.
@@ -231,7 +231,7 @@ Thông báo gửi tới người dùng (like, comment, follow, ...). `EntityRef`
 | Field | Nhiệm vụ |
 |---|---|
 | `id` (PK) | UUID |
-| `recipient_id` | Người nhận thông báo (không FK cứng — notification service tách biệt vòng đời khỏi account) |
+| `recipient_id` | Người nhận thông báo (không FK cứng — notification service tách biệt vòng đời khỏi users) |
 | `sender_id` | Người gây ra hành động (like/comment/follow...); dùng để JOIN lấy displayName/avatar khi hiển thị, không lưu snapshot |
 | `type` | Loại thông báo (enum `NotificationType`: LIKE, COMMENT, FOLLOW, ...) |
 | `entity_type` / `entity_id` | Từ `EntityRef` — loại + id đối tượng gốc (post/comment) |
@@ -274,7 +274,7 @@ Cấu hình nhận thông báo của 1 user (theo từng loại + quiet hours).
 | Field | Nhiệm vụ |
 |---|---|
 | `id` (PK) | UUID |
-| `user_id` (UNIQUE) | 1-1 với account |
+| `user_id` (UNIQUE) | 1-1 với users |
 | `quiet_hours_start` / `quiet_hours_end` | Khung giờ im lặng (VD "22:00"–"07:00") |
 | `timezone` | Múi giờ áp dụng quiet hours (VD "Asia/Ho_Chi_Minh") |
 
@@ -343,7 +343,7 @@ Trọng số quan tâm của user theo từng tag — thay cho `UserInterests.in
 
 | Field | Nhiệm vụ |
 |---|---|
-| `user_id` (PK, FK account) | |
+| `user_id` (PK, FK users) | |
 | `tag` (PK) | |
 | `weight` | Trọng số quan tâm — tăng dần khi user tương tác với bài có tag đó |
 | `updated_at` | Lần cập nhật gần nhất — dùng cho decay theo thời gian |
@@ -357,7 +357,7 @@ Index `(user_id, weight DESC)` (lấy top tag của 1 user), `tag` (tìm user qu
 
 | Field | Nhiệm vụ |
 |---|---|
-| `user_id` (PK, FK account) | |
+| `user_id` (PK, FK users) | |
 | `post_id` (PK, FK post) | |
 | `seen_at` | Thời điểm xem |
 
@@ -381,7 +381,7 @@ Index `(tag_a, count DESC)` — lấy tag liên quan nhiều nhất với 1 tag 
 ## 6. Nhóm Complaint / Attachment / Term / Email
 
 ### `complaint`
-Báo cáo vi phạm (report) nhắm vào 1 đối tượng (post/comment/account).
+Báo cáo vi phạm (report) nhắm vào 1 đối tượng (post/comment/users).
 
 | Field | Nhiệm vụ |
 |---|---|
@@ -456,16 +456,16 @@ Danh sách các biến placeholder có thể dùng trong `email_template.content
 ```
 role ──┬── role_permission ──── permission
        │
-account ─┬── token (1-1)
+users ─┬── token (1-1)
          ├── refresh_token (theo username)
          ├── follow (follower_id / followee_id, tự tham chiếu N-N)
          ├── post (owner_id) ─┬── post_media
-         │                    ├── post_like ── account (user_id)
+         │                    ├── post_like ── users (user_id)
          │                    ├── post_tag
          │                    ├── comment (post_id) ─┬── comment (parent_id, tự tham chiếu = reply)
          │                    │                      ├── comment_media
-         │                    │                      └── comment_like ── account (user_id)
-         │                    └── seen_post ── account (user_id)
+         │                    │                      └── comment_like ── users (user_id)
+         │                    └── seen_post ── users (user_id)
          ├── user_interest (user_id, tag)
          ├── notification (recipient_id / sender_id) ─┬── notification_metadata
          │                                             └── notification_sender
@@ -488,5 +488,5 @@ email_template / email_template_field (độc lập)
 - **Không dùng embedded document/mảng/Map** như bản Mongo — mọi collection lồng nhau được tách thành bảng con có FK, đảm bảo toàn vẹn dữ liệu bằng ràng buộc DB thay vì code tầng application.
 - **Composite key (`@IdClass`)** dùng cho mọi bảng join thuần túy (`post_like`, `post_tag`, `comment_like`, `follow`, `user_interest`, `seen_post`, `tag_cooccurrence`) — tránh phát sinh UUID vô nghĩa cho quan hệ chỉ cần 2 khóa ngoại.
 - **`ON DELETE CASCADE`** áp dụng xuyên suốt cho quan hệ cha-con thật sự (post → media/like/tag; comment → reply/media/like; complaint → detail) để xóa 1 dòng cha tự dọn sạch dữ liệu con, không cần code dọn thủ công.
-- **Không snapshot dữ liệu người dùng** (tên, avatar) vào bảng khác — luôn JOIN `account` để lấy dữ liệu mới nhất, tránh lệch dữ liệu khi user đổi tên/avatar (khác với `ActorSnapshot` embedded của bản Mongo).
+- **Không snapshot dữ liệu người dùng** (tên, avatar) vào bảng khác — luôn JOIN `users` để lấy dữ liệu mới nhất, tránh lệch dữ liệu khi user đổi tên/avatar (khác với `ActorSnapshot` embedded của bản Mongo).
 - **`ddl-auto: validate`** là cổng kiểm tra chính — entity Java phải khớp tuyệt đối schema Flyway, không cho Hibernate tự sinh/sửa bảng ở runtime.

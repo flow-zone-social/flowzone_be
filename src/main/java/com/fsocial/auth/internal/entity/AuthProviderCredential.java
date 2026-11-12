@@ -6,7 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import com.fsocial.shared.persistence.AbstractEntity;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 
 @Setter
 @Getter
@@ -20,7 +20,7 @@ public class AuthProviderCredential extends AbstractEntity<String> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    Account account;
+    User user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "provider", length = 16, nullable = false)

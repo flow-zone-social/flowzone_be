@@ -9,7 +9,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * Content/ActorSnapshot embed đã bị bỏ: Post giờ có text/html phẳng, owner là FK sang Account,
+ * Content/ActorSnapshot embed đã bị bỏ: Post giờ có text/html phẳng, owner là FK sang User,
  * media nằm ở bảng attachments. Mapper chỉ dựng DTO đọc ra — Post được build tay trong service
  * vì phải gắn quan hệ owner reference chứ không map thuần field.
  * {@code likes} trả rỗng ở đây; service nào cần danh sách thật thì set sau từ PostLikeRepository.

@@ -21,7 +21,7 @@ import com.fsocial.notification.api.NotificationEvent;
 import com.fsocial.comment.internal.repository.CommentLikeRepository;
 import com.fsocial.comment.internal.repository.CommentRepository;
 import com.fsocial.post.internal.repository.PostRepository;
-import com.fsocial.user.internal.repository.AccountRepository;
+import com.fsocial.user.internal.repository.UserRepository;
 import com.fsocial.comment.internal.service.CommentService;
 import com.fsocial.shared.redis.RedisService;
 import com.fsocial.media.api.MediaApi;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl implements CommentService {
     CommentRepository commentRepository;
     CommentLikeRepository commentLikeRepository;
-    AccountRepository accountRepository;
+    UserRepository userRepository;
     MediaApi mediaApi;
     PostRepository postRepository;
     UserApi userApi;
@@ -117,7 +117,7 @@ public class CommentServiceImpl implements CommentService {
             // PK (comment_id, user_id) đảm bảo idempotent
             commentLikeRepository.save(CommentLike.builder()
                     .comment(commentRepository.getReferenceById(commentId))
-                    .user(accountRepository.getReferenceById(userId))
+                    .user(userRepository.getReferenceById(userId))
                     .build());
             return true;
         }

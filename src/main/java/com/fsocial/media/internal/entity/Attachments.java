@@ -1,7 +1,7 @@
 package com.fsocial.media.internal.entity;
 
 import com.fsocial.media.api.AttachmentType;
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -36,7 +36,7 @@ public class Attachments extends AbstractEntity<String> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
-    Account owner;
+    User owner;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")

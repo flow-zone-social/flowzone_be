@@ -1,6 +1,6 @@
 package com.fsocial.comment.internal.entity;
 
-import com.fsocial.user.internal.entity.Account;
+import com.fsocial.user.internal.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -27,7 +27,7 @@ public class CommentLike {
     @Id
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    Account user;
+    User user;
 
     @Column(name = "created_at", nullable = false)
     @Builder.Default
@@ -39,7 +39,7 @@ public class CommentLike {
     @AllArgsConstructor
     @EqualsAndHashCode
     public static class Key implements Serializable {
-        // Tên field phải trùng với @Id ở entity; kiểu là kiểu PK của Comment/Account.
+        // Tên field phải trùng với @Id ở entity; kiểu là kiểu PK của Comment/User.
         private String comment;
         private String user;
     }
