@@ -46,7 +46,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleResponse updateRole(String roleId, Set<String> newPermissions) {
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new AppException(StatusCode.NOT_FOUND));
+                .orElseThrow(() -> new AppException(StatusCode.ROLE_NOT_FOUND));
 
         var permissions = permissionRepository.findAllById(newPermissions);
         Set<Permission> permissionSet = role.getPermissions() != null ? role.getPermissions() : new HashSet<>();

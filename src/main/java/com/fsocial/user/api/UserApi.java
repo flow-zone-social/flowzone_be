@@ -14,6 +14,7 @@ public interface UserApi {
     List<ActorSnapshotDTO> getOwners(List<String> userIds);
 
     boolean existsById(String id);
+    boolean checkUserById(String id);
 
     boolean isFollowing(String followerId, String followeeId);
 

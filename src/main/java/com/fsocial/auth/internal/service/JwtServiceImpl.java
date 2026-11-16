@@ -10,7 +10,6 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import jodd.exception.UncheckedException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -43,7 +42,7 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String generateToken(String accountId) {
         User account = userRepository.findById(accountId)
-                .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(StatusCode.USER_NOT_FOUND));
 
         JWTClaimsSet claimsSet = buildClaimsSet(account);
         return signToken(claimsSet);
@@ -81,7 +80,7 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String getToken(String authorization) {
         if(authorization == null || !authorization.startsWith("Bearer ")){
-            throw new UncheckedException("Authorization not found");
+            throw new AppException(StatusCode.UNAUTHENTICATED);
         }
         return authorization.substring(7);
     }

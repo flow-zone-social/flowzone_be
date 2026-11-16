@@ -20,12 +20,11 @@ public enum StatusCode implements CodeEnum {
     NOT_CONTENT(211, "Not Content", HttpStatus.BAD_REQUEST),
     IOEXCEPTION(311, "IOException", HttpStatus.INTERNAL_SERVER_ERROR),
 
-    // ===== Auth & Account =====
-    ACCOUNT_EXISTED(464, "Tài khoản đã tồn tại.", HttpStatus.BAD_REQUEST),
+    // ===== Auth & User =====
+    USER_EXISTED(464, "Tài khoản đã tồn tại.", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(465, "Email đã tồn tại.", HttpStatus.BAD_REQUEST),
-    ACCOUNT_NOT_EXISTED(467, "Tài khoản không tồn tại.", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(468, "Tài khoản chưa được xác thực.", HttpStatus.UNAUTHORIZED),
-    USER_NOT_FOUND(208, "Client not found", HttpStatus.NOT_FOUND),
+    USER_NOT_FOUND(208, "Người dùng không tồn tại.", HttpStatus.NOT_FOUND),
     OTP_INVALID(463, "Mã OTP không hợp lệ.", HttpStatus.BAD_REQUEST),
     USERNAME_EXISTED(470, "Tên đăng nhập đã tồn tại.", HttpStatus.BAD_REQUEST),
     DUPLICATION(471, "Tên đăng nhập hoặc Email đã tồn tại.", HttpStatus.BAD_REQUEST),
@@ -35,13 +34,13 @@ public enum StatusCode implements CodeEnum {
     INVALID_TOKEN(701, "Token không hợp lệ.", HttpStatus.BAD_REQUEST),
     WRONG_PASSWORD(702, "Mật khẩu không đúng.", HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(703, "Không có quyền truy cập.", HttpStatus.UNAUTHORIZED),
-    ACCOUNT_BANNED(601, "Account banned.", HttpStatus.UNAUTHORIZED),
+    USER_BANNED(601, "User banned.", HttpStatus.UNAUTHORIZED),
     ROLE_NOT_FOUND(310, "Role not found", HttpStatus.NOT_FOUND),
     LOCAL_AUTH_NOT_FOUND(704, "Tài khoản này không đăng nhập bằng mật khẩu.", HttpStatus.BAD_REQUEST),
     EMAIL_IS_NOT_VERIFY(309, "Email mail is not verify", HttpStatus.BAD_REQUEST),
     INVALID_GOOGLE_TOKEN(403, "Invalid or expired Google token", HttpStatus.FORBIDDEN),
 
-    // ===== Account Validation (Bean Validation message keys — names are load-bearing, do not rename) =====
+    // ===== User Validation (Bean Validation message keys — names are load-bearing, do not rename) =====
     INVALID_EMAIL(900, "Email không hợp lệ.", HttpStatus.BAD_REQUEST),
     REQUIRED_EMAIL(901, "Email không được để trống.", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(902, "Mật khẩu phải có ít nhất 8 ký tự, chứa ít nhất một chữ cái và một chữ số.", HttpStatus.BAD_REQUEST),
@@ -57,9 +56,9 @@ public enum StatusCode implements CodeEnum {
     INVALID_DOB(912, "Độ tuổi không phù hợp.", HttpStatus.BAD_REQUEST),
     INVALID_NAME(913, "Tên không được chứa chữ số.", HttpStatus.BAD_REQUEST),
 
-    // ===== Account Success Responses =====
+    // ===== User Success Responses =====
     SUCCESS(200, "Thao tác thành công.", HttpStatus.OK),
-    ACCOUNT_REGISTERED(200, "Tài khoản đã được đăng ký thành công.", HttpStatus.OK),
+    USER_REGISTERED(200, "Tài khoản đã được đăng ký thành công.", HttpStatus.OK),
     OTP_SENT(200, "OTP đã được gửi tới email của bạn.", HttpStatus.OK),
     OTP_VALID(200, "OTP là hợp lệ.", HttpStatus.OK),
     PASSWORD_RESET_SUCCESS(200, "Mật khẩu đã được đặt lại thành công.", HttpStatus.OK),

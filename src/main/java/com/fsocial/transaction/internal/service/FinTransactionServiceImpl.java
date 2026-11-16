@@ -12,7 +12,6 @@ import com.fsocial.transaction.internal.mapper.FinMapper;
 import com.fsocial.transaction.internal.repository.FinProductRepository;
 import com.fsocial.transaction.internal.repository.FinTransactionRepository;
 import com.fsocial.user.api.UserApi;
-import com.fsocial.user.internal.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

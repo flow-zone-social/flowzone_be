@@ -69,7 +69,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     return new AppException(StatusCode.LOGIN_FAILED);
                 });
 
-        if (!account.isStatus()) throw new AppException(StatusCode.ACCOUNT_BANNED);
+        if (!account.isStatus()) throw new AppException(StatusCode.USER_BANNED);
 
        return saveToken(account, userAgent, httpRequest);
     }
@@ -131,7 +131,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .findByProviderAndProviderUserId(AuthProvider.GOOGLE, googleUserInfo.googleId());
         if (linkedAuth.isPresent()) {
             User existingAccount = linkedAuth.get().getUser();
-            if (!existingAccount.isStatus()) throw new AppException(StatusCode.ACCOUNT_BANNED);
+            if (!existingAccount.isStatus()) throw new AppException(StatusCode.USER_BANNED);
             return this.saveToken(existingAccount, userAgent, httpRequest);
         }
 
@@ -139,7 +139,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Optional<User> accountByEmail = userRepository.findByEmail(googleUserInfo.email());
         if (accountByEmail.isPresent()) {
             User existingAccount = accountByEmail.get();
-            if (!existingAccount.isStatus()) throw new AppException(StatusCode.ACCOUNT_BANNED);
+            if (!existingAccount.isStatus()) throw new AppException(StatusCode.USER_BANNED);
 
             authProviderRepository.save(AuthProviderCredential.builder()
                     .user(existingAccount)

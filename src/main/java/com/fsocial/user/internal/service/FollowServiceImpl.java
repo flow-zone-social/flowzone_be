@@ -59,8 +59,8 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public boolean checkFollow(String follower, String followee) {
-        userRepository.findById(follower).orElseThrow(() -> new AppException(StatusCode.NOT_FOUND));
-        userRepository.findById(followee).orElseThrow(() -> new AppException(StatusCode.NOT_FOUND));
+        if (!userRepository.existsById(follower) || !userRepository.existsById(followee))
+            throw new AppException(StatusCode.USER_NOT_FOUND);
 
         return followRepository.existsByFollowerIdAndFolloweeId(follower, followee);
     }
@@ -73,7 +73,7 @@ public class FollowServiceImpl implements FollowService {
     /** 1 dòng trong bảng follow thay cho việc mutate 2 Set rồi save 2 document như bản Mongo. */
     private void updateFollowRelation(String userId, String targetId, boolean isFollow) {
         if (!userRepository.existsById(targetId) || !userRepository.existsById(userId))
-            throw new AppException(StatusCode.ACCOUNT_NOT_EXISTED);
+            throw new AppException(StatusCode.USER_NOT_FOUND);
 
         if (isFollow) {
             // PK (follower_id, followee_id) đảm bảo idempotent

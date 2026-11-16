@@ -42,7 +42,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Transactional
     public RefreshToken createRefreshToken(String accountId, String userAgent, String ipAddress) {
         userRepository.findById(accountId)
-                .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(StatusCode.USER_NOT_FOUND));
 
         long tokenCount = refreshTokenRepository.countByUserId(accountId);
         int MAX_REFRESH_TOKENS = 5;

@@ -98,8 +98,8 @@ public class AuthenticateController {
     @PostMapping("/register")
     public ApiResponse<AccountResponse> persistAccount(@RequestBody @Valid AccountRegisterRequest request) {
         return ApiResponse.<AccountResponse>builder()
-                .statusCode(StatusCode.ACCOUNT_REGISTERED.getCode())
-                .message(StatusCode.ACCOUNT_REGISTERED.getMessage())
+                .statusCode(StatusCode.USER_REGISTERED.getCode())
+                .message(StatusCode.USER_REGISTERED.getMessage())
                 .data(accountService.persistAccount(request))
                 .build();
     }
