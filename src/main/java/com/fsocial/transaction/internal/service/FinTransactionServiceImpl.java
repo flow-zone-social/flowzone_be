@@ -21,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Service
@@ -32,33 +33,51 @@ public class FinTransactionServiceImpl implements FinTransactionService {
 
     FinTransactionRepository finTransactionRepository;
     FinProductRepository finProductRepository;
+    FinWalletService finWalletService;
     UserApi userApi;
     FinMapper finMapper;
 
     @Override
     @Transactional
     public FinTransactionDTO create(String userId, FinTransactionRequest request) {
+
+
         FinTransaction transaction = new FinTransaction();
+
+
         finMapper.update(transaction, request);
         transaction.setFinProduct(resolveProduct(userId, request.getFinProductId()));
         transaction.setUser(userApi.findById(userId));
-        return finMapper.toDTO(finTransactionRepository.save(transaction));
+
+        FinTransaction saved = finTransactionRepository.save(transaction);
+        finWalletService.record(userId, saved.getType(), saved.getAmount());
+        return finMapper.toDTO(saved);
     }
 
     @Override
     @Transactional
     public FinTransactionDTO update(String userId, String id, FinTransactionRequest request) {
         FinTransaction transaction = findOwnedOrThrow(userId, id);
+        // Lấy type/amount cũ trước khi mapper ghi đè để hoàn tác đúng số đã ghi vào ví.
+        FinTransactionType oldType = transaction.getType();
+        BigDecimal oldAmount = transaction.getAmount();
+
         finMapper.update(transaction, request);
         transaction.setFinProduct(resolveProduct(userId, request.getFinProductId()));
         transaction.setUpdatedAt(LocalDateTime.now());
-        return finMapper.toDTO(finTransactionRepository.save(transaction));
+        FinTransaction saved = finTransactionRepository.save(transaction);
+
+        finWalletService.undo(userId, oldType, oldAmount);
+        finWalletService.record(userId, saved.getType(), saved.getAmount());
+        return finMapper.toDTO(saved);
     }
 
     @Override
     @Transactional
     public void delete(String userId, String id) {
-        finTransactionRepository.delete(findOwnedOrThrow(userId, id));
+        FinTransaction transaction = findOwnedOrThrow(userId, id);
+        finTransactionRepository.delete(transaction);
+        finWalletService.undo(userId, transaction.getType(), transaction.getAmount());
     }
 
     @Override

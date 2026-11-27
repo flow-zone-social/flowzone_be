@@ -26,7 +26,7 @@ public class InternalApi {
 
     @PostMapping("/upload-file")
     public ApiResponse<MediaItemDTO> uploadFile(@RequestParam("fileUpload") MultipartFile file) {
-        MediaItemDTO[] items = uploadImage.uploadMedia(new MultipartFile[]{file});
+        MediaItemDTO[] items = uploadImage.uploadMedia(new MultipartFile[]{file}, null);
         return ApiResponse.<MediaItemDTO>builder()
                 .data(items[0])
                 .message("Upload file success")
@@ -35,7 +35,7 @@ public class InternalApi {
 
     @PostMapping("/upload-files")
     public ApiResponse<List<MediaItemDTO>> uploadFiles(@RequestParam("fileUpload") MultipartFile[] file) {
-        MediaItemDTO[] items = uploadImage.uploadMedia(file);
+        MediaItemDTO[] items = uploadImage.uploadMedia(file, null);
         return ApiResponse.<List<MediaItemDTO>>builder()
                 .data(Arrays.asList(items))
                 .message("Upload file success")

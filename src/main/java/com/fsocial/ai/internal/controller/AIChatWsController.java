@@ -23,7 +23,7 @@ public class AIChatWsController {
 
     static int MAX_PROMPT_LENGTH = 1000;
     static String QUEUE_AI = "/queue/ai";
-    static String ERROR_TEXT = "Có lỗi xảy ra, vui lòng thử lại.";
+    static String ERROR_TEXT = "An error occurred. Please try again.";
 
     AIChatService aiChatService;
     SimpMessagingTemplate messagingTemplate;

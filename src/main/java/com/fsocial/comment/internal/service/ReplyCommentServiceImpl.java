@@ -53,9 +53,9 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
     @Transactional
     public ReplyCommentResponse addReplyComment(ReplyCommentRequest request) {
         Comment parent = commentRepository.findById(request.getCommentId()).orElseThrow(
-                () -> new AppException("Không tìm thấy comment ", StatusCode.COMMENT_NOT_FOUND));
+                () -> new AppException("Comment not found", StatusCode.COMMENT_NOT_FOUND));
 
-        MediaItemDTO[] mediaItems = mediaApi.uploadValidMedia(request.getMedia());
+        MediaItemDTO[] mediaItems = mediaApi.uploadValidMedia(request.getMedia(), null);
 
         Comment reply = Comment.builder()
                 .post(parent.getPost())
@@ -91,7 +91,7 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
         Comment reply = findReply(idReplyComment);
         // comment_like / comment_media cascade theo FK
         commentRepository.delete(reply);
-        return "Xóa replycomment thành công";
+        return "Reply comment deleted successfully";
     }
 
     @Override
@@ -124,7 +124,7 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
     @Transactional
     public ReplyCommentResponse updateReplyComment(ReplyCommentUpdateDTORequest updateReply) {
         if (!userExists(updateReply.getUserId())) {
-            throw new AppException("User không tồn tại", StatusCode.USER_NOT_FOUND);
+            throw new AppException("User not found", StatusCode.USER_NOT_FOUND);
         }
 
         Comment reply = findReply(updateReply.getReplyCommentId());
@@ -174,9 +174,9 @@ public class ReplyCommentServiceImpl implements ReplyCommentService {
     /** Chỉ chấp nhận comment có parent — comment gốc không phải reply. */
     private Comment findReply(String replyCommentId) {
         Comment comment = commentRepository.findById(replyCommentId).orElseThrow(
-                () -> new AppException("Reply comment không tồn tại", StatusCode.REPLY_COMMENT_NOT_FOUND));
+                () -> new AppException("Reply comment not found", StatusCode.REPLY_COMMENT_NOT_FOUND));
         if (comment.getParent() == null) {
-            throw new AppException("Reply comment không tồn tại", StatusCode.REPLY_COMMENT_NOT_FOUND);
+            throw new AppException("Reply comment not found", StatusCode.REPLY_COMMENT_NOT_FOUND);
         }
         return comment;
     }

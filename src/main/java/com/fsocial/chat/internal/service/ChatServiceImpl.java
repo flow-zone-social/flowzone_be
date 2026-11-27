@@ -110,7 +110,7 @@ public class ChatServiceImpl implements ChatService {
     public ConversationDTO createConversation(String userId, CreateConversationRequest request) {
         List<String> memberIds = request.getMemberIds();
         if (memberIds == null || memberIds.isEmpty()) {
-            throw new AppException("Member list must not be empty", StatusCode.PARAMATER_NOT_FOUND);
+            throw new AppException("Member list must not be empty", StatusCode.INVALID_PARAMETER);
         }
 
         ConversationType type = request.getType() == null ? ConversationType.DIRECT : request.getType();

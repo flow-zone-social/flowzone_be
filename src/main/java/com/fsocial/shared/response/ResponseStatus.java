@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @AllArgsConstructor
 public enum ResponseStatus {
-    SUCCESS(200,"Thao tác thành công."),
-    ERROR(404, "Thao tác thất bại.")
+    SUCCESS(200,"Operation successful."),
+    ERROR(404, "Operation failed.")
     ;
 
     private final int CODE;

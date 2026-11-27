@@ -12,8 +12,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FaqRatingRequest {
-    @NotNull(message = "Điểm đánh giá không được để trống")
-    @Min(value = 1, message = "Điểm đánh giá tối thiểu là 1")
-    @Max(value = 5, message = "Điểm đánh giá tối đa là 5")
+    @NotNull(message = "Rating is required")
+    @Min(value = 1, message = "Rating must be at least 1")
+    @Max(value = 5, message = "Rating must be at most 5")
     Integer score;
 }

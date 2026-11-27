@@ -47,7 +47,7 @@
 //    @Override
 //    public ComplaintDTO readComplaint(String complaintId) throws AppCheckedException {
 //        Complaint complaint = complaintRepository.findById(complaintId)
-//                .orElseThrow(() -> new AppCheckedException("Không tìm thấy báo cáo", StatusCode.COMPLAIN_NOT_FOUND));
+//                .orElseThrow(() -> new AppCheckedException("Report not found", StatusCode.COMPLAINT_NOT_FOUND));
 //        complaint.setReadding(true);
 //        return complantMapper.toComplaintDTO(complaintRepository.save(complaint));
 //    }
@@ -61,7 +61,7 @@
 //    @Override
 //    public ComplaintDTOResponse getComplaintById(String complaintId) throws AppCheckedException {
 //        Complaint complaint = complaintRepository.findById(complaintId)
-//                .orElseThrow(() -> new AppCheckedException("Không tìm thấy báo cáo", StatusCode.COMPLAIN_NOT_FOUND));
+//                .orElseThrow(() -> new AppCheckedException("Report not found", StatusCode.COMPLAINT_NOT_FOUND));
 //        return toComplaintResponse(complaint);
 //    }
 //

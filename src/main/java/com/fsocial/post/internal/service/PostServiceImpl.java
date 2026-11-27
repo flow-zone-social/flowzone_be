@@ -70,7 +70,7 @@ public class PostServiceImpl implements PostService {
     public PostDTO createPost(PostRequest postRequest) {
         MediaItemDTO[] mediaItems = mediaApi.uploadValidMedia(postRequest.getMedia(), AttachmentType.POST);
         User owner = userRepository.findById(postRequest.getUserId())
-                .orElseThrow(() -> new AppException("Không tìm thấy người dùng", StatusCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException("User not found", StatusCode.USER_NOT_FOUND));
         try {
             Post post = Post.builder()
                     .owner(owner)
@@ -85,7 +85,7 @@ public class PostServiceImpl implements PostService {
             return postMapper.toPostDTO(saved);
         } catch (RuntimeException e) {
             log.error("Không thể thêm bài post vào database: {}", e.getMessage(), e);
-            throw new AppException("Không thể thêm bài post vào database", StatusCode.CREATE_POST_FAILED);
+            throw new AppException("Failed to save post to database", StatusCode.CREATE_POST_FAILED);
         }
     }
 
@@ -112,7 +112,7 @@ public class PostServiceImpl implements PostService {
         boolean existed = postLikeRepository.existsByPostIdAndUserId(postId, userId);
         try {
             Post post = postRepository.findById(postId)
-                    .orElseThrow(() -> new AppException("Không tìm thấy bài viết", StatusCode.POST_NOT_FOUND));
+                    .orElseThrow(() -> new AppException("Post not found", StatusCode.POST_NOT_FOUND));
             List<String> tags = post.getTags();
 
             if (!existed) {
@@ -147,9 +147,9 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public PostDTO sharePost(PostShareRequest postRequest) {
         Post origin = postRepository.findById(postRequest.getOriginPostId())
-                .orElseThrow(() -> new AppException("Không tìm thấy bài viết gốc", StatusCode.POST_NOT_FOUND));
+                .orElseThrow(() -> new AppException("Original post not found", StatusCode.POST_NOT_FOUND));
         User owner = userRepository.findById(postRequest.getUserId())
-                .orElseThrow(() -> new AppException("Không tìm thấy người dùng", StatusCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException("User not found", StatusCode.USER_NOT_FOUND));
 
         Post post = Post.builder()
                 .owner(owner)
@@ -288,7 +288,7 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public PostResponse getPostById(String postId, String userId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new AppException("Không tìm thấy thông tin bài viết", StatusCode.POST_NOT_FOUND));
+                .orElseThrow(() -> new AppException("Post not found", StatusCode.POST_NOT_FOUND));
         ActorSnapshotDTO owner = userApi.getOwner(post.getOwner().getId());
         Integer commentCount = commentRepository.countByPostId(postId);
         return buildPostResponse(post, owner,

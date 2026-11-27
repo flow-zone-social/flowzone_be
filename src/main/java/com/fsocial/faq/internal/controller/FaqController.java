@@ -29,7 +29,7 @@ public class FaqController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<FaqDTO> createFaq(@RequestBody @Valid FaqRequest request) {
         return ApiResponse.<FaqDTO>builder()
-                .message("Tạo hướng dẫn thành công")
+                .message("Guide created successfully")
                 .data(faqService.createFaq(request))
                 .build();
     }
@@ -38,7 +38,7 @@ public class FaqController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<FaqDTO> updateFaq(@PathVariable String faqId, @RequestBody @Valid FaqRequest request) {
         return ApiResponse.<FaqDTO>builder()
-                .message("Cập nhật hướng dẫn thành công")
+                .message("Guide updated successfully")
                 .data(faqService.updateFaq(faqId, request))
                 .build();
     }
@@ -48,14 +48,14 @@ public class FaqController {
     public ApiResponse<Void> deleteFaq(@PathVariable String faqId) {
         faqService.deleteFaq(faqId);
         return ApiResponse.<Void>builder()
-                .message("Xóa hướng dẫn thành công")
+                .message("Guide deleted successfully")
                 .build();
     }
 
     @GetMapping
     public ApiResponse<List<FaqDTO>> getAllFaqs() {
         return ApiResponse.<List<FaqDTO>>builder()
-                .message("Lấy danh sách hướng dẫn thành công")
+                .message("Guides retrieved successfully")
                 .data(faqService.getAllFaqs())
                 .build();
     }
@@ -63,7 +63,7 @@ public class FaqController {
     @GetMapping("/type/{type}")
     public ApiResponse<List<FaqDTO>> getFaqsByType(@PathVariable FaqType type) {
         return ApiResponse.<List<FaqDTO>>builder()
-                .message("Lấy danh sách hướng dẫn theo loại thành công")
+                .message("Guides retrieved by type successfully")
                 .data(faqService.getFaqsByType(type))
                 .build();
     }
@@ -71,7 +71,7 @@ public class FaqController {
     @GetMapping("/{faqId}")
     public ApiResponse<FaqDTO> getFaqById(@PathVariable String faqId, @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FaqDTO>builder()
-                .message("Lấy chi tiết hướng dẫn thành công")
+                .message("Guide details retrieved successfully")
                 .data(faqService.getFaqById(faqId, jwt.getSubject()))
                 .build();
     }
@@ -81,7 +81,7 @@ public class FaqController {
     public ApiResponse<FaqDTO> rateFaq(@PathVariable String faqId, @RequestBody @Valid FaqRatingRequest request,
                                         @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FaqDTO>builder()
-                .message("Đánh giá hướng dẫn thành công")
+                .message("Guide rated successfully")
                 .data(faqService.rateFaq(faqId, jwt.getSubject(), request))
                 .build();
     }

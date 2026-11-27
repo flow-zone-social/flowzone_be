@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FinProductRequest {
-    @NotBlank(message = "Tên phân loại không được để trống")
+    @NotBlank(message = "Product name is required")
     String name;
     String descriptions;
     String avatarUrl;

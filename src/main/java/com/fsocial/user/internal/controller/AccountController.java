@@ -61,7 +61,7 @@ public class AccountController {
         exists.put("exists", accountService.existsById(userId));
         return ApiResponse.<Map<String, Boolean>>builder()
                 .data(exists)
-                .message("Kiểm tra userId có tồn tại hay không thành công")
+                .message("User ID existence checked successfully")
                 .build();
     }
 
@@ -73,7 +73,7 @@ public class AccountController {
         List<AccountStatisticRegisterDTO> res = accountService.countByCreatedAtByHours(startDate, endDate);
         return ApiResponse.<List<AccountStatisticRegisterDTO>>builder()
                 .data(res)
-                .message("Thống kê số lượng tài khoản được tạo trong ngày " + date + " thành công")
+                .message("Retrieved account registration statistics for date " + date + " successfully")
                 .build();
     }
 
@@ -86,7 +86,7 @@ public class AccountController {
                 start.atStartOfDay(), end.atTime(23, 59, 59));
         return ApiResponse.<List<AccountStatisticRegisterLongDateDTO>>builder()
                 .data(res)
-                .message("Lấy danh sách thống kê từ " + start + " đến " + end + " thành công")
+                .message("Retrieved statistics from " + start + " to " + end + " successfully")
                 .build();
     }
 
@@ -95,7 +95,7 @@ public class AccountController {
     public ApiResponse<List<ManageUserResponse>> getAllUsers() {
         return ApiResponse.<List<ManageUserResponse>>builder()
                 .data(accountService.getAllUsers())
-                .message("Lấy danh sách người dùng thành công")
+                .message("Users retrieved successfully")
                 .build();
     }
 
@@ -104,7 +104,7 @@ public class AccountController {
     public ApiResponse<Object> banAccount(@RequestParam("user_id") String userId) {
         return ApiResponse.<Object>builder()
                 .data(accountService.banUser(userId))
-                .message("Ban tài khoản thành công")
+                .message("User banned successfully")
                 .build();
     }
 
@@ -112,7 +112,7 @@ public class AccountController {
     public ApiResponse<AccountResponse> getProfile(@AuthenticationPrincipal Jwt jwt){
         return ApiResponse.<AccountResponse>builder()
                 .data(accountService.getProfile(jwt.getSubject()))
-                .message("Lấy thông tin tài khoản thành công")
+                .message("User information retrieved successfully")
                 .build();
     }
 
@@ -123,7 +123,7 @@ public class AccountController {
             @RequestParam(value = "size", defaultValue = "10") int size) {
         return ApiResponse.<SearchPageResponse<AccountResponse>>builder()
                 .data(accountService.searchUsers(keyword, page, size))
-                .message("Tìm kiếm người dùng thành công")
+                .message("User search completed successfully")
                 .build();
     }
 

@@ -1,5 +1,6 @@
 package com.fsocial.user.internal.service;
 
+import com.fsocial.transaction.api.FinWalletApi;
 import com.fsocial.user.api.ActorSnapshotDTO;
 import com.fsocial.user.api.UserApi;
 import com.fsocial.shared.response.ApiResponse;
@@ -63,6 +64,7 @@ public class AccountServiceImpl implements AccountService, UserApi {
     TokenRepository tokenRepository;
     RefreshTokenRepository refreshTokenRepository;
     DefaultMediaProvider defaultMediaProvider;
+    FinWalletApi finWalletApi;
 
     static String DEFAULT_ROLE = "USER";
 
@@ -70,7 +72,7 @@ public class AccountServiceImpl implements AccountService, UserApi {
     @Transactional(rollbackFor = Exception.class)
     public AccountResponse persistAccount(AccountRegisterRequest request) {
         User account = saveAccount(request);
-//        createProfile(account, request);
+        finWalletApi.create(account.getId());
         otpService.deleteOtp(request.getEmail(), RedisKeyType.REGISTER.getRedisKeyPrefix());
         return toAccountResponse(account);
     }
@@ -103,15 +105,15 @@ public class AccountServiceImpl implements AccountService, UserApi {
         boolean emailExisted = userRepository.countByEmail(request.getEmail()) > 0;
 
         DuplicationResponse response = DuplicationResponse.builder()
-                .username(usernameExisted ? StatusCode.USERNAME_EXISTED.getMessage() : null)
-                .email(emailExisted ? StatusCode.EMAIL_EXISTED.getMessage() : null)
+                .username(usernameExisted ? StatusCode.USERNAME_ALREADY_EXISTS.getMessage() : null)
+                .email(emailExisted ? StatusCode.EMAIL_ALREADY_EXISTS.getMessage() : null)
                 .build();
 
         boolean hasError = usernameExisted || emailExisted;
 
         return ApiResponse.<DuplicationResponse>builder()
-                .statusCode(hasError ? StatusCode.DUPLICATION.getCode() : StatusCode.VALID.getCode())
-                .message(hasError ? StatusCode.DUPLICATION.getMessage() : StatusCode.VALID.getMessage())
+                .statusCode(hasError ? StatusCode.DUPLICATE_USERNAME_OR_EMAIL.getCode() : StatusCode.VALID.getCode())
+                .message(hasError ? StatusCode.DUPLICATE_USERNAME_OR_EMAIL.getMessage() : StatusCode.VALID.getMessage())
                 .data(hasError ? response : null)
                 .build();
     }

@@ -32,7 +32,7 @@ public class MediaUploadUtils {
             throw e;
         } catch (Exception e) {
             log.error("Lỗi khi tải lên tệp: {}", e.getMessage(), e);
-            throw new AppException("Upload hình ảnh thất bại", StatusCode.UPLOAD_MEDIA_FAILED);
+            throw new AppException("Failed to upload image", StatusCode.UPLOAD_MEDIA_FAILED);
         }
     }
 

@@ -12,10 +12,10 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ComplaintDTO {
-    @NotBlank(message = "targetId không được để trống")
+    @NotBlank(message = "targetId must not be blank")
     String targetId;
-    @NotNull(message = "complaintType không được để trống")
+    @NotNull(message = "complaintType must not be null")
     ComplaintType complaintType;
-    @NotBlank(message = "termOfServiceId không được để trống")
+    @NotBlank(message = "termOfServiceId must not be blank")
     String termOfServiceId;
 }

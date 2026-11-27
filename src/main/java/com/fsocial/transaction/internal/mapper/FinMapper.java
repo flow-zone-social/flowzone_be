@@ -4,6 +4,7 @@ import com.fsocial.transaction.internal.dto.*;
 import com.fsocial.transaction.internal.entity.FinCategory;
 import com.fsocial.transaction.internal.entity.FinProduct;
 import com.fsocial.transaction.internal.entity.FinTransaction;
+import com.fsocial.transaction.internal.entity.FinWallet;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -59,4 +60,7 @@ public interface FinMapper {
     @Mapping(target = "finProduct", ignore = true)
     @Mapping(target = "user", ignore = true)
     void update(@MappingTarget FinTransaction transaction, FinTransactionRequest request);
+
+    // ----- Wallet -----
+    FinWalletDTO toDTO(FinWallet wallet);
 }

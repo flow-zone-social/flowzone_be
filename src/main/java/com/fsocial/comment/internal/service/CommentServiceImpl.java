@@ -58,11 +58,11 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentResponse addComment(CommentDTORequest request) {
-        MediaItemDTO[] mediaItems = mediaApi.uploadValidMedia(request.getMedia());
+        MediaItemDTO[] mediaItems = mediaApi.uploadValidMedia(request.getMedia(), null);
 
         String postId = request.getPostId();
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new AppException("Không tìm thấy bài đăng", StatusCode.POST_NOT_FOUND));
+                .orElseThrow(() -> new AppException("Post not found", StatusCode.POST_NOT_FOUND));
 
         Comment comment = Comment.builder()
                 .post(post)
@@ -109,9 +109,9 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public boolean toggleLikeComment(String commentId, String userId) {
         if (!commentExist(commentId))
-            throw new AppException("Bình luận không tồn tại", StatusCode.COMMENT_NOT_FOUND);
+            throw new AppException("Comment not found", StatusCode.COMMENT_NOT_FOUND);
         if (!userExists(userId))
-            throw new AppException("Tài khoản người dùng không tồn tại", StatusCode.USER_NOT_FOUND);
+            throw new AppException("User not found", StatusCode.USER_NOT_FOUND);
 
         if (!commentLikeRepository.existsByCommentIdAndUserId(commentId, userId)) {
             // PK (comment_id, user_id) đảm bảo idempotent
@@ -134,10 +134,10 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentResponse updateComment(CommentUpdateDTORequest request) {
         if (!userExists(request.getUserId()))
-            throw new AppException("User không tồn tại", StatusCode.USER_NOT_FOUND);
+            throw new AppException("User not found", StatusCode.USER_NOT_FOUND);
 
         Comment comment = commentRepository.findById(request.getCommentId())
-                .orElseThrow(() -> new AppException("Không tìm thấy comment", StatusCode.COMMENT_NOT_FOUND));
+                .orElseThrow(() -> new AppException("Comment not found", StatusCode.COMMENT_NOT_FOUND));
         comment.setText(request.getText());
         comment.setHtml(request.getHtml());
         return convertToCommentResponse(commentRepository.save(comment));
@@ -153,7 +153,7 @@ public class CommentServiceImpl implements CommentService {
             interactionEventPublisher.publish(comment.getPost().getId(), comment.getUserId(), "COMMENT_DELETE",
                     postRepository.findById(comment.getPost().getId()).map(Post::getTags).orElse(List.of()));
         });
-        return "Xóa comment thành công";
+        return "Comment deleted successfully";
     }
 
     public boolean userExists(String userId) {

@@ -30,7 +30,7 @@ public class ComplaintController {
         ComplaintDTOResponse complaintDTO = complaintService.addComplaint(complaint, jwt.getSubject());
         return ApiResponse.<ComplaintDTOResponse>builder()
                 .data(complaintDTO)
-                .message("Báo cáo thành công")
+                .message("Report submitted successfully")
                 .dateTime(LocalDateTime.now())
                 .build();
     }
@@ -39,7 +39,7 @@ public class ComplaintController {
     public ApiResponse<ComplaintDTO> updateComplaint(@RequestParam("complaint_id") String complaintId) {
         return ApiResponse.<ComplaintDTO>builder()
                 .data(complaintService.readComplaint(complaintId))
-                .message("Cập nhật trạng thái đã đọc báo cáo thành công")
+                .message("Report read status updated successfully")
                 .build();
     }
 
@@ -47,7 +47,7 @@ public class ComplaintController {
     public ApiResponse<List<ComplaintDTOResponse>> getComplaints() {
         return ApiResponse.<List<ComplaintDTOResponse>>builder()
                 .data(complaintService.getComplaints())
-                .message("Lấy danh sách báo cáo thành công")
+                .message("Reports retrieved successfully")
                 .dateTime(LocalDateTime.now())
                 .build();
     }

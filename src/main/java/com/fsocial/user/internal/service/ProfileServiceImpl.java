@@ -38,7 +38,7 @@ public class ProfileServiceImpl implements ProfileService {
     public ProfileResponse updateAvatar(MultipartFile file, String userId) {
         String avatar = uploadImage(file, AttachmentType.AVATAR);
         User account = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(StatusCode.UPLOAD_AVATAR_FAIL));
+                .orElseThrow(() -> new AppException(StatusCode.UPLOAD_AVATAR_FAILED));
 
         account.setAvatar(avatar);
         return accountMapper.toProfileResponse(userRepository.save(account));
@@ -48,7 +48,7 @@ public class ProfileServiceImpl implements ProfileService {
     public ProfileResponse updateBackground(MultipartFile file, String userId) {
         String background = uploadImage(file, AttachmentType.BACKGROUND);
         User account = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(StatusCode.UPLOAD_AVATAR_FAIL));
+                .orElseThrow(() -> new AppException(StatusCode.UPLOAD_AVATAR_FAILED));
 
         account.setBackground(background);
         return accountMapper.toProfileResponse(userRepository.save(account));

@@ -30,7 +30,7 @@ public class FinCategoryServiceImpl implements FinCategoryService {
     @Transactional
     public FinCategoryDTO create(String userId, FinCategoryRequest request) {
         if (finCategoryRepository.existsByUserIdAndName(userId, request.getName())) {
-            throw new AppException(StatusCode.FIN_CATEGORY_NAME_EXISTED);
+            throw new AppException(StatusCode.FIN_CATEGORY_NAME_ALREADY_EXISTS);
         }
         FinCategory category = new FinCategory();
         finMapper.update(category, request);
@@ -43,7 +43,7 @@ public class FinCategoryServiceImpl implements FinCategoryService {
     public FinCategoryDTO update(String userId, String id, FinCategoryRequest request) {
         FinCategory category = findOwnedOrThrow(userId, id);
         if (finCategoryRepository.existsByUserIdAndNameAndIdNot(userId, request.getName(), id)) {
-            throw new AppException(StatusCode.FIN_CATEGORY_NAME_EXISTED);
+            throw new AppException(StatusCode.FIN_CATEGORY_NAME_ALREADY_EXISTS);
         }
         finMapper.update(category, request);
         category.setUpdatedAt(LocalDateTime.now());

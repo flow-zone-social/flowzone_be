@@ -40,7 +40,7 @@ public class TermOfServicesServiceImpl implements TermOfServicesService, TermOfS
     @Override
     public TermOfServiceDTO updateTermOfService(TermOfServiceDTO termOfService) {
 
-        TermOfServices findById = termRepository.findById(termOfService.getId()).orElseThrow(() -> new AppException("Không tìm thấy chính sách", StatusCode.TERM_OF_SERVICE_NOT_FOUND));
+        TermOfServices findById = termRepository.findById(termOfService.getId()).orElseThrow(() -> new AppException("Policy not found", StatusCode.TERM_OF_SERVICE_NOT_FOUND));
 
         findById.setName(termOfService.getName());
 
@@ -50,13 +50,13 @@ public class TermOfServicesServiceImpl implements TermOfServicesService, TermOfS
     @Override
     public String deleteTermOfService(String termOfServiceId) {
          termRepository.deleteById(termOfServiceId);
-        return "Xóa chính sách thành công";
+        return "Policy deleted successfully";
     }
 
     @Override
     public TermSummary findSummaryById(String id) {
         TermOfServices term = termRepository.findById(id).orElseThrow(
-                () -> new AppException("Không tìm thấy chính sách", StatusCode.TERM_OF_SERVICE_NOT_FOUND));
+                () -> new AppException("Policy not found", StatusCode.TERM_OF_SERVICE_NOT_FOUND));
         return TermSummary.builder()
                 .id(term.getId())
                 .name(term.getName())

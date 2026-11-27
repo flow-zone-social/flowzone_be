@@ -41,7 +41,9 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateToken(String accountId) {
-        User account = userRepository.findById(accountId)
+        // role là LAZY và open-in-view=false: phải fetch cùng user, nếu không getRole().getName()
+        // sẽ ném LazyInitializationException khi caller không có @Transactional (vd login()).
+        User account = userRepository.findWithRoleById(accountId)
                 .orElseThrow(() -> new AppException(StatusCode.USER_NOT_FOUND));
 
         JWTClaimsSet claimsSet = buildClaimsSet(account);

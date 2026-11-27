@@ -13,10 +13,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PostShareRequest {
-    @NotBlank(message = "Id người dùng không được để trống")
+    @NotBlank(message = "User ID is required")
     String userId;
     String text;
     String html;
-    @NotBlank(message = "originPost người dùng không được để trống")
+    @NotBlank(message = "originPost is required")
     String originPostId;
 }

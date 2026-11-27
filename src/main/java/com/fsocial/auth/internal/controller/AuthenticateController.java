@@ -93,7 +93,7 @@ public class AuthenticateController {
                 .statusCode(StatusCode.PASSWORD_RESET_SUCCESS.getCode())
                 .message(StatusCode.PASSWORD_RESET_SUCCESS.getMessage())
                 .build();
-    }
+    }   
 
     @PostMapping("/register")
     public ApiResponse<AccountResponse> persistAccount(@RequestBody @Valid AccountRegisterRequest request) {

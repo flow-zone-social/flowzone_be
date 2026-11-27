@@ -27,7 +27,7 @@ public class HashtagController {
     @GetMapping
     public ApiResponse<List<HashtagDTO>> getAllHashtags() {
         return ApiResponse.<List<HashtagDTO>>builder()
-                .message("Lấy danh sách hashtag thành công")
+                .message("Hashtags retrieved successfully")
                 .data(hashtagService.getAllHashtags())
                 .build();
     }
@@ -35,7 +35,7 @@ public class HashtagController {
     @GetMapping("/suggestions")
     public ApiResponse<List<HashtagSuggestion>> getSuggestions(@RequestParam String name) {
         return ApiResponse.<List<HashtagSuggestion>>builder()
-                .message("Lấy gợi ý hashtag thành công")
+                .message("Hashtag suggestions retrieved successfully")
                 .data(hashtagService.findHastagByName(name))
                 .build();
     }
@@ -43,7 +43,7 @@ public class HashtagController {
     @GetMapping("/{id}")
     public ApiResponse<HashtagDTO> getHashtagById(@PathVariable String id) {
         return ApiResponse.<HashtagDTO>builder()
-                .message("Lấy chi tiết hashtag thành công")
+                .message("Hashtag details retrieved successfully")
                 .data(hashtagService.getHashtagById(id))
                 .build();
     }
@@ -52,7 +52,7 @@ public class HashtagController {
     @PreAuthorize("hasRole('USER')")
     public ApiResponse<HashtagDTO> createHashtag(@RequestBody @Valid HashtagRequest request) {
         return ApiResponse.<HashtagDTO>builder()
-                .message("Tạo hashtag thành công")
+                .message("Hashtag created successfully")
                 .data(hashtagService.createHashtag(request))
                 .build();
     }
@@ -61,7 +61,7 @@ public class HashtagController {
     @PreAuthorize("hasRole('USER')")
     public ApiResponse<HashtagDTO> updateHashtag(@PathVariable String id, @RequestBody @Valid HashtagRequest request) {
         return ApiResponse.<HashtagDTO>builder()
-                .message("Cập nhật hashtag thành công")
+                .message("Hashtag updated successfully")
                 .data(hashtagService.updateHashtag(id, request))
                 .build();
     }
@@ -71,7 +71,7 @@ public class HashtagController {
     public ApiResponse<Void> deleteHashtag(@PathVariable String id) {
         hashtagService.deleteHashtag(id);
         return ApiResponse.<Void>builder()
-                .message("Xóa hashtag thành công")
+                .message("Hashtag deleted successfully")
                 .build();
     }
 
@@ -79,7 +79,7 @@ public class HashtagController {
     @PreAuthorize("hasRole('USER')")
     public ApiResponse<HashtagDTO> restoreHashtag(@PathVariable String id) {
         return ApiResponse.<HashtagDTO>builder()
-                .message("Khôi phục hashtag thành công")
+                .message("Hashtag restored successfully")
                 .data(hashtagService.restoreHashtag(id))
                 .build();
     }

@@ -97,7 +97,7 @@ public class FinProductServiceImpl implements FinProductService {
                 .filter(p -> !p.getId().equals(selfId))
                 .isPresent();
         if (taken) {
-            throw new AppException(StatusCode.FIN_PRODUCT_NAME_EXISTED);
+            throw new AppException(StatusCode.FIN_PRODUCT_NAME_ALREADY_EXISTS);
         }
     }
 }

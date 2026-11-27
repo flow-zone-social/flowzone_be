@@ -39,7 +39,7 @@ public class ReplyCommentController {
         return ApiResponse.<Map<String, Boolean>>builder()
                 .data(map)
                 .dateTime(LocalDateTime.now())
-                .message(like ? "Like thành công" : "Bỏ like thành công")
+                .message(like ? "Reply comment liked successfully" : "Reply comment unliked successfully")
                 .build();
     }
 
@@ -52,7 +52,7 @@ public class ReplyCommentController {
         return ApiResponse.<ReplyCommentResponse>builder()
                 .data(replyCommentService.addReplyComment(request))
                 .dateTime(LocalDateTime.now())
-                .message("Reply comment thành công")
+                .message("Reply comment created successfully")
                 .build();
     }
 
@@ -83,7 +83,7 @@ public class ReplyCommentController {
                 .data(replyCommentService.getReplyCommentsByCommentId(commentId))
                 .dateTime(LocalDateTime.now())
                 .statusCode(200)
-                .message("Lấy thông tin trả lời bình luận thành công")
+                .message("Reply comment retrieved successfully")
                 .build();
     }
 }

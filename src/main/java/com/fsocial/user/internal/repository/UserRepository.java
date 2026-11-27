@@ -16,6 +16,10 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, String> {
     @Query("select a from User a left join fetch a.role where a.username = :username")
     Optional<User> findByUsername(@Param("username") String username);
+
+    /** Fetch kèm role — dùng khi cần đọc role ngoài transaction (vd build JWT claims). */
+    @Query("select a from User a left join fetch a.role where a.id = :id")
+    Optional<User> findWithRoleById(@Param("id") String id);
     Optional<User> findByEmail(String email);
     Optional<User> findByUsernameOrEmail(String username, String email);
     long countByUsername(String username);

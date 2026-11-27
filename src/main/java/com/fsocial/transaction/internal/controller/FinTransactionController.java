@@ -28,7 +28,7 @@ public class FinTransactionController {
     public ApiResponse<FinTransactionDTO> create(@RequestBody @Valid FinTransactionRequest request,
                                                  @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FinTransactionDTO>builder()
-                .message("Tạo giao dịch thành công")
+                .message("Transaction created successfully")
                 .data(finTransactionService.create(jwt.getSubject(), request))
                 .build();
     }
@@ -38,7 +38,7 @@ public class FinTransactionController {
                                                  @RequestBody @Valid FinTransactionRequest request,
                                                  @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FinTransactionDTO>builder()
-                .message("Cập nhật giao dịch thành công")
+                .message("Transaction updated successfully")
                 .data(finTransactionService.update(jwt.getSubject(), id, request))
                 .build();
     }
@@ -46,13 +46,13 @@ public class FinTransactionController {
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable String id, @AuthenticationPrincipal Jwt jwt) {
         finTransactionService.delete(jwt.getSubject(), id);
-        return ApiResponse.<Void>builder().message("Xóa giao dịch thành công").build();
+        return ApiResponse.<Void>builder().message("Transaction deleted successfully").build();
     }
 
     @GetMapping("/{id}")
     public ApiResponse<FinTransactionDTO> getById(@PathVariable String id, @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FinTransactionDTO>builder()
-                .message("Lấy chi tiết giao dịch thành công")
+                .message("Transaction details retrieved successfully")
                 .data(finTransactionService.getById(jwt.getSubject(), id))
                 .build();
     }
@@ -64,7 +64,7 @@ public class FinTransactionController {
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<SearchPageResponse<FinTransactionDTO>>builder()
-                .message("Lấy danh sách giao dịch thành công")
+                .message("Transactions retrieved successfully")
                 .data(finTransactionService.getMyTransactions(jwt.getSubject(), type, page, size))
                 .build();
     }
