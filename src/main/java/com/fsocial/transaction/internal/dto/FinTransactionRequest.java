@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 
@@ -15,18 +16,19 @@ import java.math.BigDecimal;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FinTransactionRequest {
-    @NotBlank(message = "Tên giao dịch không được để trống")
+    @NotBlank(message = "Transaction name is required")
     String name;
     String descriptions;
     String avatarUrl;
 
-    @NotNull(message = "Số tiền không được để trống")
-    @Positive(message = "Số tiền phải lớn hơn 0")
+    @NotNull(message = "Amount is required")
+    @Positive(message = "Amount must be greater than 0")
     BigDecimal amount;
 
-    @NotNull(message = "Loại giao dịch không được để trống")
+    @NotNull(message = "Transaction type is required")
     FinTransactionType type;
 
-    /** Tùy chọn: null/rỗng = giao dịch chưa phân loại. */
     String finProductId;
+
+    MultipartFile icon;
 }

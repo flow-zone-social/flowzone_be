@@ -68,7 +68,7 @@ public class MailUtils {
             CreateEmailResponse response  = resend.emails().send(emailOptions);
             System.out.println("Send mail successfull: " +  response.getId());
         }catch (ResendException e ){
-            throw  new AppException(e.getMessage(),StatusCode.SEND_MAIL_FAIL);
+            throw  new AppException(e.getMessage(),StatusCode.SEND_MAIL_FAILED);
         }
 
     }

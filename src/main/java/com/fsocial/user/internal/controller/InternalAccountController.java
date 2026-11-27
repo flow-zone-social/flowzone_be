@@ -22,7 +22,7 @@ public class InternalAccountController {
     public ApiResponse<Boolean> validUserId(@PathVariable String userId) {
         return ApiResponse.<Boolean>builder()
                 .data(accountService.existsById(userId))
-                .message("Kiểm tra userId thành công")
+                .message("User ID checked successfully")
                 .build();
     }
 }

@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class LikeReplyCommentDTO {
-    @NotBlank(message = "Replycomment Id không được bỏ trống")
+    @NotBlank(message = "Reply comment ID is required")
     String replyCommentId;
     String userId;
 }

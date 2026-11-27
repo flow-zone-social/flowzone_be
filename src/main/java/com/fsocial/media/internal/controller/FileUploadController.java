@@ -28,7 +28,7 @@ public class FileUploadController {;
 
     @PostMapping
     public ApiResponse<List<MediaItemDTO>> uploadFile(@RequestParam("fileUpload") MultipartFile[] file) {
-            MediaItemDTO[] mediaItems = uploadImage.uploadMedia(file);
+            MediaItemDTO[] mediaItems = uploadImage.uploadMedia(file, null);
             log.info("Upload file successfull: {}", (Object) mediaItems);
             return ApiResponse.<List<MediaItemDTO>>builder()
                             .data(Arrays.asList(mediaItems))
@@ -39,7 +39,7 @@ public class FileUploadController {;
 
     @PostMapping("/messages")
     public ApiResponse<List<MediaItemDTO>> uploadImageInMessage(@RequestParam MultipartFile[] images) {
-        MediaItemDTO[] mediaItems = uploadImage.uploadMedia(images);
+        MediaItemDTO[] mediaItems = uploadImage.uploadMedia(images, null);
         return ApiResponse.buildApiResponse(Arrays.asList(mediaItems), ResponseStatus.SUCCESS);
     }
 }

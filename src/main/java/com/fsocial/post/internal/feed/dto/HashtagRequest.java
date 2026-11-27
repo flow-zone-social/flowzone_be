@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class HashtagRequest {
-    @NotBlank(message = "Tên hashtag không được để trống")
-    @Size(max = 64, message = "Tên hashtag tối đa 64 ký tự")
+    @NotBlank(message = "Hashtag name is required")
+    @Size(max = 64, message = "Hashtag name must be at most 64 characters")
     String name;
 }

@@ -5,8 +5,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface MediaApi {
 
-    MediaItemDTO[] uploadValidMedia(MultipartFile[] media);
-
     MediaItemDTO[] uploadValidMedia(MultipartFile[] media, AttachmentType type);
 
     MediaItemDTO uploadSingleMedia(MultipartFile file, AttachmentType type);

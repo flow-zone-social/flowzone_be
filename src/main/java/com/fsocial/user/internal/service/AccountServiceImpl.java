@@ -1,5 +1,6 @@
 package com.fsocial.user.internal.service;
 
+import com.fsocial.transaction.api.FinWalletApi;
 import com.fsocial.user.api.ActorSnapshotDTO;
 import com.fsocial.user.api.UserApi;
 import com.fsocial.shared.response.ApiResponse;
@@ -63,6 +64,7 @@ public class AccountServiceImpl implements AccountService, UserApi {
     TokenRepository tokenRepository;
     RefreshTokenRepository refreshTokenRepository;
     DefaultMediaProvider defaultMediaProvider;
+    FinWalletApi finWalletApi;
 
     static String DEFAULT_ROLE = "USER";
 
@@ -70,7 +72,7 @@ public class AccountServiceImpl implements AccountService, UserApi {
     @Transactional(rollbackFor = Exception.class)
     public AccountResponse persistAccount(AccountRegisterRequest request) {
         User account = saveAccount(request);
-//        createProfile(account, request);
+        finWalletApi.create(account.getId());
         otpService.deleteOtp(request.getEmail(), RedisKeyType.REGISTER.getRedisKeyPrefix());
         return toAccountResponse(account);
     }
@@ -80,13 +82,13 @@ public class AccountServiceImpl implements AccountService, UserApi {
     public AccountResponse getUser(String id) {
         return userRepository.findById(id)
                 .map(this::toAccountResponse)
-                .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(StatusCode.USER_NOT_FOUND));
     }
 
     @Override
     public void resetPassword(String email, String newPassword) {
         User account = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(StatusCode.USER_NOT_FOUND));
 
         AuthProviderCredential localAuth = authProviderRepository
                 .findByUser_IdAndProvider(account.getId(), AuthProvider.LOCAL)
@@ -103,15 +105,15 @@ public class AccountServiceImpl implements AccountService, UserApi {
         boolean emailExisted = userRepository.countByEmail(request.getEmail()) > 0;
 
         DuplicationResponse response = DuplicationResponse.builder()
-                .username(usernameExisted ? StatusCode.USERNAME_EXISTED.getMessage() : null)
-                .email(emailExisted ? StatusCode.EMAIL_EXISTED.getMessage() : null)
+                .username(usernameExisted ? StatusCode.USERNAME_ALREADY_EXISTS.getMessage() : null)
+                .email(emailExisted ? StatusCode.EMAIL_ALREADY_EXISTS.getMessage() : null)
                 .build();
 
         boolean hasError = usernameExisted || emailExisted;
 
         return ApiResponse.<DuplicationResponse>builder()
-                .statusCode(hasError ? StatusCode.DUPLICATION.getCode() : StatusCode.VALID.getCode())
-                .message(hasError ? StatusCode.DUPLICATION.getMessage() : StatusCode.VALID.getMessage())
+                .statusCode(hasError ? StatusCode.DUPLICATE_USERNAME_OR_EMAIL.getCode() : StatusCode.VALID.getCode())
+                .message(hasError ? StatusCode.DUPLICATE_USERNAME_OR_EMAIL.getMessage() : StatusCode.VALID.getMessage())
                 .data(hasError ? response : null)
                 .build();
     }
@@ -119,7 +121,7 @@ public class AccountServiceImpl implements AccountService, UserApi {
     @Override
     public void changePassword(String userId, String oldPassword, String newPassword) {
         User account = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(StatusCode.USER_NOT_FOUND));
 
         AuthProviderCredential localAuth = authProviderRepository
                 .findByUser_IdAndProvider(account.getId(), AuthProvider.LOCAL)
@@ -137,6 +139,19 @@ public class AccountServiceImpl implements AccountService, UserApi {
     @Override
     public boolean existsById(String id) {
         return userRepository.findById(id).isPresent();
+    }
+
+    @Override
+    public boolean checkUserById(String id) {
+        User exists = userRepository.findById(id).orElseThrow(
+                () -> new AppException(StatusCode.USER_NOT_FOUND)
+        );
+
+        if(!exists.isStatus()){
+            throw new AppException(StatusCode.USER_BANNED);
+        }
+
+        return true;
     }
 
     @Override
@@ -182,7 +197,7 @@ public class AccountServiceImpl implements AccountService, UserApi {
     @Transactional
     public String banUser(String userId) {
         User banAccount = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(StatusCode.USER_NOT_FOUND));
 
         Optional<Token> tokenAccount = tokenRepository.findByUser(banAccount);
         Optional<RefreshToken> refreshToken = refreshTokenRepository.findFirstByUserIdOrderByExpiryDateDesc(banAccount.getId());
@@ -199,9 +214,9 @@ public class AccountServiceImpl implements AccountService, UserApi {
     @Override
     @Transactional(readOnly = true)
     public AccountResponse getProfile(String userId) {
-
-        Optional<User> account = Optional.of(userRepository.findById(userId).orElseThrow(() -> new AppException(StatusCode.COMMENT_NOT_FOUND)));
-        return toAccountResponse(account.get());
+        User account = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(StatusCode.USER_NOT_FOUND));
+        return toAccountResponse(account);
     }
 
     @Override
@@ -322,10 +337,10 @@ public class AccountServiceImpl implements AccountService, UserApi {
 
     @Override
     public User findById(String id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new AppException(StatusCode.ACCOUNT_NOT_EXISTED));
+        User user = userRepository.findById(id).orElseThrow(() -> new AppException(StatusCode.USER_NOT_FOUND));
 
         if(!user.isStatus()) {
-            throw new AppException(StatusCode.ACCOUNT_BANNED);
+            throw new AppException(StatusCode.USER_BANNED);
         }
 
         return user;

@@ -38,7 +38,7 @@ public class ProfileController {
         log.info("followee: {}", followee);
         return ApiResponse.<AccountResponse>builder()
                 .data(accountService.getUser(followee))
-                .message("Lấy thông tin tài khoản thành công")
+                .message("User information retrieved successfully")
                 .build();
     }
 
@@ -46,7 +46,7 @@ public class ProfileController {
     public ApiResponse<AccountResponse> getProfileOwner(@AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<AccountResponse>builder()
                 .data(accountService.getUser(jwt.getSubject()))
-                .message("Lấy thông tin tài khoản thành công")
+                .message("User information retrieved successfully")
                 .build();
     }
 
@@ -55,7 +55,7 @@ public class ProfileController {
                                                                    @RequestParam(name = "created_at") String createAt) {
         return ApiResponse.<ApiDataCursor<PostResponse>>builder()
                 .data(postService.getMyPost(userId, lastItem, createAt))
-                .message("Lấy thông tin tài khoản thành công")
+                .message("User information retrieved successfully")
                 .build();
     }
 
@@ -66,7 +66,7 @@ public class ProfileController {
     ) {
         return ApiResponse.<AccountResponse>builder()
                 .data(profileService.updatePersonalInfo(request, jwt.getSubject()))
-                .message("Cập nhật thông tin cá nhân thành công")
+                .message("Profile updated successfully")
                 .build();
     }
 
@@ -76,7 +76,7 @@ public class ProfileController {
 
         return ApiResponse.<ProfileResponse>builder()
                 .data(profileService.updateAvatar(file, userId))
-                .message("Cập nhật ảnh đại diện thành công")
+                .message("Avatar updated successfully")
                 .build();
     }
 
@@ -86,7 +86,7 @@ public class ProfileController {
 
         return ApiResponse.<ProfileResponse>builder()
                 .data(profileService.updateBackground(file, userId))
-                .message("Cập nhật ảnh nền thành công")
+                .message("Background updated successfully")
                 .build();
     }
 

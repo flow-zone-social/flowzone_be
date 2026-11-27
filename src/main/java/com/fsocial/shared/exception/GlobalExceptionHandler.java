@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
         log.error("Unhandled exception", exception);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<Void>builder()
                 .statusCode(StatusCode.UNCATEGORIZED_EXCEPTION.getCode())
-                .message("Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.")
+                .message("A system error occurred. Please try again later.")
                 .dateTime(LocalDateTime.now())
                 .data(null)
                 .build());
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
         log.error("Lỗi gọi AI provider (model không hợp lệ, không tồn tại hoặc đã deprecated): {}", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(ApiResponse.<Void>builder()
                 .statusCode(StatusCode.AI_SERVICE_FAILED.getCode())
-                .message("Dịch vụ AI hiện không khả dụng, vui lòng thử lại sau.")
+                .message("AI service is currently unavailable. Please try again later.")
                 .dateTime(LocalDateTime.now())
                 .build());
     }
@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiResponse<Void>> handlingAccessDeniedException(AccessDeniedException exception) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.<Void>builder()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .message("Bạn không có quyền thực hiện hành động này")
+                .message("You do not have permission to perform this action")
                 .dateTime(LocalDateTime.now())
                 .build());
     }
@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiResponse<Void>> handlingMaxUploadSizeExceededException(MaxUploadSizeExceededException exception) {
         return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
                 .statusCode(StatusCode.FILE_TOO_LARGE.getCode())
-                .message("Tệp tải lên vượt quá giới hạn cho phép của hệ thống.")
+                .message("Uploaded file exceeds the allowed system limit.")
                 .dateTime(LocalDateTime.now())
                 .build());
     }
@@ -73,8 +73,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = NoResourceFoundException.class)
     ResponseEntity<ApiResponse<Void>> handlingNotFoundException(NoResourceFoundException exception) {
         return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
-                .statusCode(StatusCode.ENPOINTMENT_NOT_FOUND.getCode())
-                .message("Không tìm thấy enpoint: " + exception.getResourcePath())
+                .statusCode(StatusCode.ENDPOINT_NOT_FOUND.getCode())
+                .message("Endpoint not found: " + exception.getResourcePath())
                 .dateTime(LocalDateTime.now())
                 .build());
     }
@@ -91,7 +91,7 @@ public class GlobalExceptionHandler {
                     .build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
-                    .statusCode(StatusCode.PARAMATER_NOT_FOUND.getCode())
+                    .statusCode(StatusCode.INVALID_PARAMETER.getCode())
                     .message(enumKey)
                     .dateTime(LocalDateTime.now())
                     .build());
@@ -101,8 +101,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = MissingServletRequestParameterException.class)
     ResponseEntity<ApiResponse<Void>> handlingMethodIllegalStateException(MissingServletRequestParameterException exception) {
         return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
-                .statusCode(StatusCode.METHOD_NOT_INSTALLED.getCode())
-                .message("Không tìm thấy tham số: " + exception.getParameterName())
+                .statusCode(StatusCode.MISSING_PARAMETER.getCode())
+                .message("Missing required parameter: " + exception.getParameterName())
                 .dateTime(LocalDateTime.now())
                 .build());
     }

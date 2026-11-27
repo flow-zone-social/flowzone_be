@@ -41,23 +41,10 @@ public class UploadMediaImpl implements UploadMedia {
     private static final String CLOUDINARY_FILE_TOO_LARGE = "file size too large";
     private static final String[] SUPPORTED_IMAGE_TYPES = {"jpg", "jpeg", "png", "gif"};
     private static final String[] SUPPORTED_VIDEO_TYPES = {"mp4", "mov", "avi", "wmv"};
-    private static final String FILE_TOO_LARGE_MESSAGE = "Tệp %s vượt quá giới hạn 10MB, vui lòng chọn tệp nhỏ hơn.";
-    private static final String PARTIAL_UPLOAD_FAILED_MESSAGE = "Một số tệp tải lên thất bại. Vui lòng kiểm tra lại các tệp lỗi.";
-    private static final String ALL_UPLOAD_FAILED_MESSAGE = "Tất cả tệp tải lên đều thất bại. Vui lòng kiểm tra lại dung lượng và định dạng tệp.";
+    private static final String FILE_TOO_LARGE_MESSAGE = "File %s exceeds the 10MB limit. Please choose a smaller file.";
+    private static final String PARTIAL_UPLOAD_FAILED_MESSAGE = "Some files failed to upload. Please check the failed files.";
     private static final String FILE_NAME_FALLBACK = "unknown";
     private static final String UPLOAD_ERROR_MESSAGE = "Upload failed";
-    private static final String SECURE_URL_KEY = "secure_url";
-    private static final String PUBLIC_ID_KEY = "public_id";
-    private static final String BYTES_KEY = "bytes";
-    private static final String RESOURCE_TYPE_KEY = "resource_type";
-    private static final String FORMAT_KEY = "format";
-    private static final String WIDTH_KEY = "width";
-    private static final String HEIGHT_KEY = "height";
-
-    @Override
-    public MediaItemDTO[] uploadMedia(MultipartFile[] files) {
-        return uploadMedia(files, null);
-    }
 
     @Override
     public MediaItemDTO[] uploadMedia(MultipartFile[] files, AttachmentType type) {
@@ -88,10 +75,7 @@ public class UploadMediaImpl implements UploadMedia {
         }
 
         if (successCount == 0) {
-            throw new AppException(hasOversizeFailure
-                    ? "Tất cả tệp đều vượt quá giới hạn 10MB. Vui lòng chọn tệp tin nhỏ hơn."
-                    : ALL_UPLOAD_FAILED_MESSAGE,
-                    hasOversizeFailure ? StatusCode.FILE_TOO_LARGE : StatusCode.UPLOAD_MEDIA_FAILED);
+            throw new AppException(hasOversizeFailure ? StatusCode.FILE_TOO_LARGE : StatusCode.UPLOAD_MEDIA_FAILED);
         }
 
         if (successCount < countValidFiles(files)) {
@@ -127,24 +111,24 @@ public class UploadMediaImpl implements UploadMedia {
 
             tempFile = convertToFile(file, extension);
             Map<String, Object> uploadParams = configureUploadParams(resourceType);
-            uploadParams.put(PUBLIC_ID_KEY, publicId);
-            uploadParams.put(RESOURCE_TYPE_KEY, resourceType);
+            uploadParams.put("public_id", publicId);
+            uploadParams.put("resource_type", resourceType);
             uploadParams.put("overwrite", true);
             uploadParams.put("invalidate", true);
 
             Map uploadResult = cloudinary.uploader().upload(tempFile, uploadParams);
 
-            String secureUrl = uploadResult.get(SECURE_URL_KEY).toString();
-            String resolvedType = uploadResult.get(RESOURCE_TYPE_KEY).toString();
-            Object rawWidth = uploadResult.get(WIDTH_KEY);
-            Object rawHeight = uploadResult.get(HEIGHT_KEY);
+            String secureUrl = uploadResult.get("secure_url").toString();
+            String resolvedType = uploadResult.get("resource_type").toString();
+            Object rawWidth = uploadResult.get("width");
+            Object rawHeight = uploadResult.get("height");
             Integer width = rawWidth != null ? Integer.parseInt(rawWidth.toString()) : null;
             Integer height = rawHeight != null ? Integer.parseInt(rawHeight.toString()) : null;
             AttachmentDTO saved = attachmentsService.save(AttachmentDTO.builder()
-                    .publicId(uploadResult.get(PUBLIC_ID_KEY).toString())
-                    .size(uploadResult.get(BYTES_KEY).toString())
+                    .publicId(uploadResult.get("public_id").toString())
+                    .size(uploadResult.get("bytes").toString())
                     .resourceType(resolvedType)
-                    .fileType(uploadResult.get(FORMAT_KEY).toString())
+                    .fileType(uploadResult.get("format").toString())
                     .ownerId(userId)
                     .url(secureUrl)
                     .type(type)

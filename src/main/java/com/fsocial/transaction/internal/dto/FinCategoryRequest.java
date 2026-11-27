@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FinCategoryRequest {
-    @NotBlank(message = "Tên hạng mục không được để trống")
+    @NotBlank(message = "Category name is required")
     String name;
     String descriptions;
     String avatarUrl;

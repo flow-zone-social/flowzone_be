@@ -22,7 +22,7 @@ public class TermOfServiceController {
     public ApiResponse<TermOfServiceDTO> addTermOfSerivce(@RequestBody TermOfServiceDTO termOfServiceDTO) {
         TermOfServiceDTO termOfService = termOfServicesService.addTermOfService(termOfServiceDTO);
         return ApiResponse.<TermOfServiceDTO>builder()
-                .message("Thêm chính sách mới thành công")
+                .message("Policy created successfully")
                 .data(termOfService)
                 .build();
     }
@@ -31,7 +31,7 @@ public class TermOfServiceController {
     public ApiResponse<TermOfServiceDTO> updateTermOfSerivce(@RequestBody TermOfServiceDTO termOfServiceDTO) {
         TermOfServiceDTO termOfService = termOfServicesService.updateTermOfService(termOfServiceDTO);
         return ApiResponse.<TermOfServiceDTO>builder()
-                .message("Cập nhật chính sách thành công")
+                .message("Policy updated successfully")
                 .data(termOfService)
                 .build();
     }
@@ -40,7 +40,7 @@ public class TermOfServiceController {
     public ApiResponse<String> deleteTermOfSerivce(@RequestParam("term_id") String termId) {
 
         return ApiResponse.<String>builder()
-                .message("Xóa chính sách thành công")
+                .message("Policy deleted successfully")
                 .data(termOfServicesService.deleteTermOfService(termId))
                 .build();
     }
@@ -53,7 +53,7 @@ public class TermOfServiceController {
 
         return ApiResponse.<List<TermOfServiceDTO>>builder()
                 .data(res)
-                .message("Lấy toàn bộ danh sách chính sách thành công")
+                .message("Policies retrieved successfully")
                 .build();
     }
 }

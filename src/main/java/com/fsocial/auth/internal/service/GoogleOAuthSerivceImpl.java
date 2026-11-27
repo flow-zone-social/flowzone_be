@@ -47,7 +47,7 @@ public class GoogleOAuthSerivceImpl implements GoogleOAuthService {
             return payload;
         } catch (IOException | GeneralSecurityException e) {
             log.error("Failed to exchange authorization code", e);
-            throw new AppException(StatusCode.IOEXCEPTION);
+            throw new AppException(StatusCode.IO_EXCEPTION);
         }
     }
 }

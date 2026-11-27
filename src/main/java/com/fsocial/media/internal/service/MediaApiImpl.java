@@ -21,11 +21,6 @@ public class MediaApiImpl implements MediaApi {
     UploadMedia uploadMedia;
 
     @Override
-    public MediaItemDTO[] uploadValidMedia(MultipartFile[] media) {
-        return mediaUploadUtils.uploadValidMedia(media);
-    }
-
-    @Override
     public MediaItemDTO[] uploadValidMedia(MultipartFile[] media, AttachmentType type) {
         return mediaUploadUtils.uploadValidMedia(media, type);
     }

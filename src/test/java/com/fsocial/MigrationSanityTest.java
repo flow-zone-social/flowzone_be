@@ -63,7 +63,8 @@ class MigrationSanityTest {
                 .type(AttachmentType.POST)
                 .resourceType("image")
                 .build());
-        postRepository.saveAndFlush(post);
+        // Post đã managed: chỉ cần persist attachments. Không gọi postRepository.save(post) ở đây —
+        // đó là merge(), và Hibernate sẽ thay các Attachments transient trong post.media bằng bản rỗng.
         attachmentsRepository.saveAllAndFlush(post.getMedia());
 
         assertThat(mediaCount(post.getId())).isEqualTo(2);
@@ -96,14 +97,16 @@ class MigrationSanityTest {
                 .type(AttachmentType.POST)
                 .resourceType("image")
                 .build());
-        postRepository.saveAndFlush(post);
         attachmentsRepository.saveAllAndFlush(post.getMedia());
         postLikeRepository.saveAndFlush(new PostLike(post.getId(), owner.getId()));
 
         Comment root = commentRepository.saveAndFlush(
                 Comment.builder().post(post).userId(owner.getId()).text("root").build());
 
-        postRepository.delete(post);
+        // Giống PostServiceImpl.deletePost: xóa trong context chỉ có Post, để FK ON DELETE CASCADE của DB
+        // dọn attachments/comment. Nếu để chúng còn managed, flush sẽ ném TransientObjectException.
+        entityManager.clear();
+        postRepository.deleteById(post.getId());
         postRepository.flush();
 
         assertThat(mediaCount(post.getId())).isZero();

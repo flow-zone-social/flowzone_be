@@ -43,7 +43,7 @@ public class PostController {
         List<PostResponse> posts = postService.getPostsByUserId(userId, feedSize);
         log.info("Lấy thông tin bài viết thành công");
         return ApiResponse.<List<PostResponse>>builder()
-                .message("Lấy bài đăng thành công")
+                .message("Post data retrieved successfully")
                 .dateTime(LocalDateTime.now())
                 .data(posts)
                 .build();
@@ -55,7 +55,7 @@ public class PostController {
         String userId = jwt.getSubject();
         List<PostResponse> posts = postService.getPostsByUserId(userId, 10);
         return ApiResponse.<List<PostResponse>>builder()
-                .message("Lấy bài đăng thành công")
+                .message("Post data retrieved successfully")
                 .dateTime(LocalDateTime.now())
                 .data(posts)
                 .build();
@@ -67,7 +67,7 @@ public class PostController {
         List<PostResponse> posts = postService.getPostByFollowing(userId);
         log.info("Lấy thông tin bài viết theo following thành công");
         return ApiResponse.<List<PostResponse>>builder()
-                .message("Lấy bài đăng theo following thành công")
+                .message("Following posts retrieved successfully")
                 .dateTime(LocalDateTime.now())
                 .data(posts)
                 .build();
@@ -83,7 +83,7 @@ public class PostController {
         SearchPageResponse<PostResponse> findByText = postService.findByText(findString, userId, page, size);
         log.info("Tìm kiếm bài đăng theo text thành công");
         return ApiResponse.<SearchPageResponse<PostResponse>>builder()
-                .message("Lấy bài đăng thành công")
+                .message("Post data retrieved successfully")
                 .dateTime(LocalDateTime.now())
                 .data(findByText)
                 .build();
@@ -96,7 +96,7 @@ public class PostController {
         PostResponse result = postService.getPostById(postId, userId);
         log.info("Tìm kiếm bài đăng theo id thành công");
         return ApiResponse.<PostResponse>builder()
-                .message("Lấy bài đăng thành công")
+                .message("Post data retrieved successfully")
                 .dateTime(LocalDateTime.now())
                 .data(result)
                 .build();
@@ -112,7 +112,7 @@ public class PostController {
         log.info("Lấy thông tin thống kê theo {} thành công", date);
         return ApiResponse.<List<PostStatisticsDTO>>builder()
                 .data(result)
-                .message("Lấy toàn bộ danh sách thống kê số lượng bài viết trong ngày " + date + "  thành công")
+                .message("Retrieved post count statistics for date " + date + " successfully")
                 .build();
     }
 
@@ -125,7 +125,7 @@ public class PostController {
 
         return ApiResponse.<List<PostStatisticsLongDateDTO>>builder()
                 .data(postService.countStatisticsPostLongDay(startDate, endDate))
-                .message("Lấy toàn bộ danh sách thống kê số lượng bài viết từ ngày " + startDate + " đến " + endDate + "  thành công")
+                .message("Retrieved post count statistics from " + startDate + " to " + endDate + " successfully")
                 .build();
     }
 
@@ -138,7 +138,7 @@ public class PostController {
 
         if ((request.getText() == null || request.getText().isEmpty())
                 && (request.getMedia() == null || request.getMedia().length == 0)) {
-            throw new AppException("Bài viết phải có nội dung, hình ảnh hoặc video", StatusCode.NOT_CONTENT);
+            throw new AppException("Post must contain text, images or videos", StatusCode.CONTENT_REQUIRED);
         }
 
         PostDTO post = postService.createPost(request);
@@ -146,7 +146,7 @@ public class PostController {
         return ApiResponse.<PostDTO>builder()
                 .data(post)
                 .statusCode(StatusCode.CREATE_POST_SUCCESS.getCode())
-                .message("Tạo bài viết thành công")
+                .message("Post created successfully")
                 .build();
     }
 
@@ -158,7 +158,7 @@ public class PostController {
 
         //check postId
         if (postId == null || postId.isEmpty()) {
-            throw new AppException("Mã bài viết không được để trống", StatusCode.POST_NOT_FOUND);
+            throw new AppException("Post ID must not be empty", StatusCode.POST_NOT_FOUND);
         }
 
         //Mapping DTO
@@ -173,7 +173,7 @@ public class PostController {
         //return result
         return ApiResponse.<PostDTO>builder()
                 .data(post)
-                .message("Cập nhật bài viết thành công")
+                .message("Post updated successfully")
                 .build();
     }
 
@@ -182,7 +182,7 @@ public class PostController {
             @RequestParam("postId") String postId) {
         postService.deletePost(postId);
         return ApiResponse.<Void>builder()
-                .message("Xóa bài viết thành công")
+                .message("Post deleted successfully")
                 .build();
     }
 
@@ -198,7 +198,7 @@ public class PostController {
         map.put("userId", userId);
         return ApiResponse.<Map<String, Object>>builder()
                 .data(map)
-                .message(like ? "Thích bài viết thành công" : "bỏ thích bài viết thành công")
+                .message(like ? "Post liked successfully" : "Post unliked successfully")
                 .build();
     }
 
@@ -210,7 +210,7 @@ public class PostController {
         return ApiResponse.<PostDTO>builder()
                 .data(post)
                 .statusCode(StatusCode.OK.getCode())
-                .message("Chia sẽ bài viết thành công")
+                .message("Post shared successfully")
                 .build();
     }
 }

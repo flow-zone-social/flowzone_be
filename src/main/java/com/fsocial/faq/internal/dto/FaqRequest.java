@@ -12,15 +12,15 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FaqRequest {
-    @NotBlank(message = "Tên không được để trống")
+    @NotBlank(message = "Name is required")
     String name;
 
     String description;
 
-    @NotBlank(message = "Nội dung không được để trống")
+    @NotBlank(message = "Content is required")
     String content;
 
-    @NotNull(message = "Loại không được để trống")
+    @NotNull(message = "Type is required")
     FaqType type;
 
     String attachmentId;

@@ -27,7 +27,7 @@ public class FinCategoryController {
     @PostMapping
     public ApiResponse<FinCategoryDTO> create(@RequestBody @Valid FinCategoryRequest request, @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FinCategoryDTO>builder()
-                .message("Tạo hạng mục thành công")
+                .message("Category created successfully")
                 .data(finCategoryService.create(jwt.getSubject(), request))
                 .build();
     }
@@ -35,7 +35,7 @@ public class FinCategoryController {
     @PutMapping("/{id}")
     public ApiResponse<FinCategoryDTO> update(@PathVariable String id, @RequestBody @Valid FinCategoryRequest request, @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FinCategoryDTO>builder()
-                .message("Cập nhật hạng mục thành công")
+                .message("Category updated successfully")
                 .data(finCategoryService.update(jwt.getSubject(), id, request))
                 .build();
     }
@@ -43,13 +43,13 @@ public class FinCategoryController {
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable String id, @AuthenticationPrincipal Jwt jwt) {
         finCategoryService.delete(jwt.getSubject(), id);
-        return ApiResponse.<Void>builder().message("Xóa hạng mục thành công").build();
+        return ApiResponse.<Void>builder().message("Category deleted successfully").build();
     }
 
     @GetMapping
     public ApiResponse<List<FinCategoryDTO>> getAll(@AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<List<FinCategoryDTO>>builder()
-                .message("Lấy danh sách hạng mục thành công")
+                .message("Categories retrieved successfully")
                 .data(finCategoryService.getAll(jwt.getSubject()))
                 .build();
     }
@@ -57,7 +57,7 @@ public class FinCategoryController {
     @GetMapping("/{id}")
     public ApiResponse<FinCategoryDTO> getById(@PathVariable String id, @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FinCategoryDTO>builder()
-                .message("Lấy chi tiết hạng mục thành công")
+                .message("Category details retrieved successfully")
                 .data(finCategoryService.getById(jwt.getSubject(), id))
                 .build();
     }

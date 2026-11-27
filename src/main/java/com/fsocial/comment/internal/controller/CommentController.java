@@ -52,7 +52,7 @@ public class CommentController {
         result.put("userid", userId);
         return ApiResponse.<Map<String, Object>>builder()
                 .data(result)
-                .message(like ? "Thích bình luận thành công" : "Hủy thích bình luận thành công")
+                .message(like ? "Comment liked successfully" : "Comment unliked successfully")
                 .build();
     }
 

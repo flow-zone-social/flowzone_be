@@ -27,7 +27,7 @@ public class FinProductController {
     @PostMapping
     public ApiResponse<FinProductDTO> create(@RequestBody @Valid FinProductRequest request, @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FinProductDTO>builder()
-                .message("Tạo phân loại thành công")
+                .message("Product created successfully")
                 .data(finProductService.create(jwt.getSubject(), request))
                 .build();
     }
@@ -35,7 +35,7 @@ public class FinProductController {
     @PutMapping("/{id}")
     public ApiResponse<FinProductDTO> update(@PathVariable String id, @RequestBody @Valid FinProductRequest request, @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FinProductDTO>builder()
-                .message("Cập nhật phân loại thành công")
+                .message("Product updated successfully")
                 .data(finProductService.update(jwt.getSubject(), id, request))
                 .build();
     }
@@ -43,14 +43,14 @@ public class FinProductController {
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable String id, @AuthenticationPrincipal Jwt jwt) {
         finProductService.delete(jwt.getSubject(), id);
-        return ApiResponse.<Void>builder().message("Xóa phân loại thành công").build();
+        return ApiResponse.<Void>builder().message("Product deleted successfully").build();
     }
 
     @GetMapping
     public ApiResponse<List<FinProductDTO>> getAll(@RequestParam(required = false) String categoryId,
                                                     @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<List<FinProductDTO>>builder()
-                .message("Lấy danh sách phân loại thành công")
+                .message("Products retrieved successfully")
                 .data(finProductService.getAll(jwt.getSubject(), categoryId))
                 .build();
     }
@@ -58,7 +58,7 @@ public class FinProductController {
     @GetMapping("/{id}")
     public ApiResponse<FinProductDTO> getById(@PathVariable String id, @AuthenticationPrincipal Jwt jwt) {
         return ApiResponse.<FinProductDTO>builder()
-                .message("Lấy chi tiết phân loại thành công")
+                .message("Product details retrieved successfully")
                 .data(finProductService.getById(jwt.getSubject(), id))
                 .build();
     }

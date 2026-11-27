@@ -83,7 +83,7 @@ public class ComplainServiceImpl implements ComplaintService {
     @Override
     public ComplaintDTO readComplaint(String complaintId) {
         Complaint complaint = complaintRepository.findById(complaintId)
-                .orElseThrow(() -> new AppException("Không tìm thấy khiếu nại", StatusCode.COMPLAIN_NOT_FOUND));
+                .orElseThrow(() -> new AppException("Complaint not found", StatusCode.COMPLAINT_NOT_FOUND));
         complaint.setRead(true);
 
         complaintRepository.save(complaint);
@@ -108,7 +108,7 @@ public class ComplainServiceImpl implements ComplaintService {
     @Transactional(readOnly = true)
     public ComplaintDTOResponse getComplaintById(String complaintId) {
         Complaint complaint = complaintRepository.findById(complaintId)
-                .orElseThrow(() -> new AppException("Không tìm thấy báo cáo", StatusCode.COMPLAIN_NOT_FOUND));
+                .orElseThrow(() -> new AppException("Report not found", StatusCode.COMPLAINT_NOT_FOUND));
         ComplaintDetail detail = complaint.getDetails().isEmpty() ? null : complaint.getDetails().get(0);
         return mapToComplainResponse(complaint, detail);
     }
@@ -186,7 +186,7 @@ public class ComplainServiceImpl implements ComplaintService {
         try {
             return userApi.getOwner(userId);
         } catch (Exception e) {
-            throw new AppException("Không tìm thấy thông tin người dùng: " + userId, StatusCode.USER_NOT_FOUND);
+            throw new AppException("User not found: " + userId, StatusCode.USER_NOT_FOUND);
         }
     }
 }
